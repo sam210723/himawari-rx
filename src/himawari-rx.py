@@ -2,12 +2,15 @@
 himawari-rx.py
 https://github.com/sam210723/himawari-rx
 
-Frontend for HimawariCast image generator
+Frontend for HimawariCast file assembler and image generator
 """
 
 
 from argparse import ArgumentParser
+import colorama
+from colorama import Fore, Back, Style
 from configparser import ConfigParser
+from pathlib import Path
 
 class HimawariRX:
     def __init__(self):
@@ -18,10 +21,25 @@ class HimawariRX:
         print("│    @sam210723       vksdr.com/himawari-rx    │")
         print("└──────────────────────────────────────────────┘\n")
 
+        # Initialise Colorama
+        colorama.init(autoreset=True)
+
         self.args = self.parse_args()
         self.config = self.parse_config()
         self.print_config()
-    
+
+        self.dirs()
+
+
+    def dirs(self):
+        """
+        Configure output directory structure
+        """
+
+        # Create output root directory
+        if not self.config['rx']['path'].exists():
+            self.config['rx']['path'].mkdir()
+
 
     def parse_args(self):
         """
@@ -45,6 +63,9 @@ class HimawariRX:
         cfgp.read(self.args.config)
 
         opts = {
+            "rx": {
+                "path": Path(cfgp.get('rx', 'path'))
+            },
             "udp": {
                 "ip":   cfgp.get('udp', 'ip'),
                 "port": cfgp.getint('udp', 'port')
@@ -60,6 +81,7 @@ class HimawariRX:
         """
 
         print(f"UDP INPUT:      {self.config['udp']['ip']}:{self.config['udp']['port']}")
+        print(f"OUTPUT PATH:    {self.config['rx']['path'].absolute()}")
         print(f"CONFIG FILE:    {self.args.config}")
 
 
