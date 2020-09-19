@@ -11,6 +11,8 @@ import colorama
 from colorama import Fore, Back, Style
 from configparser import ConfigParser
 from pathlib import Path
+import socket
+import struct
 
 class HimawariRX:
     def __init__(self):
@@ -28,10 +30,40 @@ class HimawariRX:
         self.config = self.parse_config()
         self.print_config()
 
-        self.dirs()
+        self.config_dirs()
+
+        self.config_input()
+
+        print("──────────────────────────────────────────────────────────────────────────────────\n")
 
 
-    def dirs(self):
+    def config_input(self):
+        """
+        Configure UDP socket
+        """
+
+        self.sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        ip = self.config['udp']['ip']
+        port = self.config['udp']['port']
+
+        print(f"Binding UDP socket ({ip}:{port})...", end='')
+
+        try:
+            # Bind socket
+            self.sck.bind(('', port))
+
+            # Setup multicast
+            mreq = struct.pack("=4sl", socket.inet_aton(ip), socket.INADDR_ANY)
+            self.sck.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+
+            print(Fore.GREEN + Style.BRIGHT + "SUCCESS")
+        except socket.error as e:
+            print(Fore.WHITE + Back.RED + Style.BRIGHT + "FAILED")
+            print(e)
+            self.safe_stop()
+
+
+    def config_dirs(self):
         """
         Configure output directory structure
         """
@@ -82,7 +114,16 @@ class HimawariRX:
 
         print(f"UDP INPUT:      {self.config['udp']['ip']}:{self.config['udp']['port']}")
         print(f"OUTPUT PATH:    {self.config['rx']['path'].absolute()}")
-        print(f"CONFIG FILE:    {self.args.config}")
+        print(f"CONFIG FILE:    {self.args.config}\n")
+
+
+    def safe_stop(self, message=True):
+        """
+        Safely kill threads and exit
+        """
+
+        if message: print("\nExiting...")
+        exit()
 
 
 if __name__ == "__main__":
