@@ -13,6 +13,8 @@ from pathlib import Path
 import socket
 import struct
 
+from assembler import Assembler
+
 class HimawariRX:
     def __init__(self):
         print("┌──────────────────────────────────────────────┐")
@@ -28,10 +30,15 @@ class HimawariRX:
         self.args = self.parse_args()
         self.config = self.parse_config()
         self.print_config()
-
         self.config_dirs()
-
         self.config_input()
+
+        self.assembler = Assembler()
+
+        # Check assembler thread is ready
+        if not self.assembler.ready:
+            print(Fore.WHITE + Back.RED + Style.BRIGHT + "ASSEMBLER CORE THREAD FAILED TO START")
+            self.safe_stop()
 
         print("──────────────────────────────────────────────────────────────────────────────────\n")
 
@@ -49,6 +56,7 @@ class HimawariRX:
                 data, addr = self.sck.recvfrom(1427)
                 
                 # Push to assembler
+                self.assembler.push(data)
             except Exception as e:
                 print(e)
                 self.safe_stop()
@@ -140,6 +148,7 @@ class HimawariRX:
         """
 
         self.stop = True
+        self.assembler.stop = True
 
         if message: print("\nExiting...")
         exit()
