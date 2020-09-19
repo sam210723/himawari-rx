@@ -5,7 +5,6 @@ https://github.com/sam210723/himawari-rx
 Frontend for HimawariCast file assembler and image generator
 """
 
-
 from argparse import ArgumentParser
 import colorama
 from colorama import Fore, Back, Style
@@ -35,6 +34,24 @@ class HimawariRX:
         self.config_input()
 
         print("──────────────────────────────────────────────────────────────────────────────────\n")
+
+        self.stop = False
+        self.loop()
+
+
+    def loop(self):
+        """
+        Handle data from UDP socket
+        """
+
+        while not self.stop:
+            try:
+                data, addr = self.sck.recvfrom(1427)
+                
+                # Push to assembler
+            except Exception as e:
+                print(e)
+                self.safe_stop()
 
 
     def config_input(self):
@@ -122,9 +139,15 @@ class HimawariRX:
         Safely kill threads and exit
         """
 
+        self.stop = True
+
         if message: print("\nExiting...")
         exit()
 
 
 if __name__ == "__main__":
-    HimawariRX()
+    try:
+        HimawariRX()
+    except KeyboardInterrupt:
+        print("Exiting...")
+        exit()
