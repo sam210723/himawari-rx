@@ -4,6 +4,7 @@ https://github.com/sam210723/himawari-rx
 """
 
 from collections import deque
+from enum import Enum
 from threading import Thread
 from time import sleep
 
@@ -45,11 +46,19 @@ class Assembler:
                 sleep(10 / 1000)
                 continue
             
-            print(packet[:16])
+            self.parse(packet)
         
         # Gracefully exit core thread
         if self.stop:
             return
+
+
+    def parse(self, packet):
+        """
+        Parse packet header
+        """
+
+        packet_type = PacketType(packet[1])
 
 
     def push(self, packet):
@@ -79,3 +88,8 @@ class Assembler:
         """
 
         return len(self.rxq) == 0
+
+class PacketType(Enum):
+    CONTENTS = 1
+    INFO     = 3
+    UNKNOWN  = 255
