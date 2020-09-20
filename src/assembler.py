@@ -80,6 +80,25 @@ class Assembler:
 
         file_id = int.from_bytes(packet[4:8], 'little')
         file_part = int.from_bytes(packet[8:10], 'little')
+        
+        # Ignore parts without associated file
+        if self.files.get(file_id) == None: return
+        
+        # Append data to file payload
+        self.files[file_id]['payload'] += packet[16:]
+
+        #if self.dump != None:
+            #if "IR1" in self.files[file_id]['name']: self.dump.write(packet)
+
+        # Check if all parts have been received
+        if file_part == (self.files[file_id]['parts'] - 1):
+            if "IMG_DK01VIS_202007060930_005" in self.files[file_id]['name']:
+                f = open(f"received/{self.files[file_id]['name']}", "wb")
+                f.write(self.files[file_id]['payload'])
+                f.close()
+                print("Saved")
+        
+        print(".", end="", flush=False)
 
 
     def parse_file_info(self, packet):
