@@ -48,62 +48,57 @@ class Assembler:
                 sleep(10 / 1000)
                 continue
             
-            self.parse(packet)
+            # Parse primary packet header
+            packet_type = self.parse_primary(packet)
+
+            # Parse packet data
+            if   packet_type == "contents": self.parse_file_contents(packet)
+            elif packet_type == "info":     self.parse_file_info(packet)
         
         # Gracefully exit core thread
         if self.stop:
             return
 
 
-    def parse(self, packet):
+    def parse_primary(self, packet):
         """
-        Parse packet header
+        Parse primary packet header
         """
 
-        # [00][TYPE][LEN:1][LEN:0][][][][][COUNTER:1][COUNTER:0]
-        header = packet[:10]
+        packet_header = packet[:10]
+        packet_type = PacketType(packet_header[1])
+        packet_length = int.from_bytes(packet_header[2:4], 'little')
 
-        packet_type = PacketType(packet[1])
-        packet_length = int.from_bytes(header[2:4], 'little')
-
-        if packet_type.name == "contents":
-            file_id = packet[4:8]
-            print(f"  ID:          {self.to_hex(file_id, 4)}")
-
-            file_part = int.from_bytes(header[8:10], 'little')
-
-            if self.dump:
-                self.dump.write(packet)
-                self.dump.flush()
-        
-        elif packet_type.name == "info":
-            file_id = packet[4:8]
-
-            file_name = packet[84:]
-            file_name = file_name[:file_name.index(b'\x00')]
-            file_name = file_name.decode('utf-8')
-
-            file_path = packet[188:]
-            file_path = file_path[:file_path.index(b'\x00')]
-            file_path = file_path.decode('utf-8')
-
-            data_length = packet[8]
-
-            transmit_time = datetime.utcfromtimestamp(
-                int.from_bytes(packet[60:64], 'little')
-            )
-            creation_time = datetime.utcfromtimestamp(
-                int.from_bytes(packet[164:168], 'little')
-            )
+        return packet_type.name
 
 
-            print( "[FILE INFO]")
-            print(f"  NAME:        {file_name}")
-            print(f"  PATH:        {file_path}")
-            print(f"  ID:          {self.to_hex(file_id, 4)}")
-            print(f"  CREATED:     {creation_time.strftime('%Y-%m-%d %H:%M:%S')} UTC")
-            print(f"  TRANSMITTED: {transmit_time.strftime('%Y-%m-%d %H:%M:%S')} UTC")
-            print()
+    def parse_file_contents(self, packet):
+        """
+        Parse file contents packet
+        """
+
+        file_id = int.from_bytes(packet[4:8], 'little')
+        file_part = int.from_bytes(packet[8:10], 'little')
+
+
+    def parse_file_info(self, packet):
+        """
+        Parse file info packet
+        """
+
+        file_id = int.from_bytes(packet[4:8], 'little')
+        file_name = self.get_string(packet[84:])
+        file_path = self.get_string(packet[188:])
+        packet_data_length = packet[8]
+        file_tx_time = self.get_time(packet[60:64])
+        file_creation_time = self.get_time(packet[164:168])
+
+        print( "[FILE INFO]")
+        print(f"  ID:          {self.to_hex(file_id, 4)}")
+        print(f"  NAME:        {file_name}")
+        print(f"  CREATED:     {file_creation_time[1]}")
+        print(f"  TRANSMITTED: {file_tx_time[1]}")
+        print()
 
 
     def push(self, packet):
