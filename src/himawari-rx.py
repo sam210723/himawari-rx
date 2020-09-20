@@ -33,7 +33,15 @@ class HimawariRX:
         self.config_dirs()
         self.config_input()
 
-        self.assembler = Assembler()
+        if self.args.dump != None:
+            self.dumpf = open(self.args.dump, "wb")
+            print(Fore.GREEN + Style.BRIGHT + f"Opened packet output file: {self.args.dump}")
+        else:
+            self.dumpf = None
+
+        self.assembler = Assembler(
+            self.dumpf
+        )
 
         # Check assembler thread is ready
         if not self.assembler.ready:
@@ -50,6 +58,8 @@ class HimawariRX:
         """
         Handle data from UDP socket
         """
+
+        print("Waiting for new files...\n")
 
         while not self.stop:
             try:
@@ -107,6 +117,7 @@ class HimawariRX:
         argp.description = "Receive weather images from geostationary satellite Himawari-8 (140.7˚E) via the HimawariCast service."
         argp.add_argument("--config", action="store", help="Configuration file path (.ini)", default="himawari-rx.ini")
         argp.add_argument("-v", action="store_true", help="Enable verbose console output (only useful for debugging)", default=False)
+        argp.add_argument("--dump", action="store", help="Path to packet output file")
         
         return argp.parse_args()
     
@@ -149,6 +160,9 @@ class HimawariRX:
 
         self.stop = True
         self.assembler.stop = True
+        
+        if self.args.dump != None:
+            self.dumpf.close()
 
         if message: print("\nExiting...")
         exit()
