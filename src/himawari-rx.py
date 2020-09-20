@@ -48,7 +48,7 @@ class HimawariRX:
             print(Fore.WHITE + Back.RED + Style.BRIGHT + "ASSEMBLER CORE THREAD FAILED TO START")
             self.safe_stop()
 
-        print("──────────────────────────────────────────────────────────────────────────────────\n")
+        print("──────────────────────────────────────────────────────────────────────────────────")
 
         self.stop = False
         self.loop()
@@ -58,8 +58,6 @@ class HimawariRX:
         """
         Handle data from UDP socket
         """
-
-        print("Waiting for new files...\n")
 
         while not self.stop:
             try:
