@@ -4,16 +4,17 @@ https://github.com/sam210723/himawari-rx
 """
 
 from collections import deque
+from datetime import datetime
 from enum import Enum
 from threading import Thread
 from time import sleep
 
 class Assembler:
     """
-    Coordinates assembling bz2 files from UDP frames.
+    Coordinates assembly of bz2 files from UDP frames.
     """
 
-    def __init__(self):
+    def __init__(self, dump):
         """
         Initialises assembler class
         """
@@ -21,6 +22,7 @@ class Assembler:
         self.ready = False      # Assembler ready flag
         self.stop = False       # Core thread stop flag
         self.rxq = deque()      # Data receive queue
+        self.dump = dump        # Packet dump file
 
         # Setup core assembler thread
         assembler_thread = Thread()
@@ -58,7 +60,42 @@ class Assembler:
         Parse packet header
         """
 
+        # [00][TYPE][LEN:1][LEN:0][][][][][COUNTER:1][COUNTER:0]
+        header = packet[:10]
+
         packet_type = PacketType(packet[1])
+        packet_length = int.from_bytes(header[2:4], 'little')
+
+        if packet_type.name == "contents":
+            packet_counter = int.from_bytes(header[8:10], 'little')
+        
+        elif packet_type.name == "info":
+            file_name = packet[84:]
+            file_name = file_name[:file_name.index(b'\x00')]
+            file_name = file_name.decode('utf-8')
+
+            file_path = packet[188:]
+            file_path = file_path[:file_path.index(b'\x00')]
+            file_path = file_path.decode('utf-8')
+
+            transmit_time = datetime.utcfromtimestamp(
+                int.from_bytes(packet[60:64], 'little')
+            )
+            creation_time = datetime.utcfromtimestamp(
+                int.from_bytes(packet[164:168], 'little')
+            )
+
+
+            print( "[FILE INFO]")
+            print(f"  NAME:        {file_name}")
+            print(f"  PATH:        {file_path}")
+            print(f"  CREATED:     {creation_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"  TRANSMITTED: {transmit_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print()
+
+            if self.dump:
+                self.dump.write(packet)
+                self.dump.flush()
 
 
     def push(self, packet):
@@ -89,7 +126,15 @@ class Assembler:
 
         return len(self.rxq) == 0
 
+
+    def to_hex(self, data, l):
+        if type(data) == bytes: data = int.from_bytes(data, byteorder='big')
+        
+        return f"0x{data:0{l*2}X}"
+
+
 class PacketType(Enum):
-    CONTENTS = 1
-    INFO     = 3
-    UNKNOWN  = 255
+    unknown  = 0
+    contents = 1
+    info     = 3
+    unknown1 = 255
