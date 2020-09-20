@@ -141,6 +141,27 @@ class Assembler:
         return f"0x{data:0{l*2}X}"
 
 
+    def get_string(self, data):
+        """
+        Gets null-terminated string from bytes
+        """
+        
+        end = data.index(b'\x00')
+        return data[:end].decode('utf-8')
+
+
+    def get_time(self, data):
+        """
+        Get datetime object and human readable string from UNIX timestamp
+        """
+
+        ts = int.from_bytes(data, 'little')
+        dt = datetime.utcfromtimestamp(ts)
+        s = dt.strftime('%Y-%m-%d %H:%M:%S UTC')
+
+        return dt, s
+
+
 class PacketType(Enum):
     unknown  = 0
     contents = 1
