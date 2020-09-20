@@ -67,9 +67,18 @@ class Assembler:
         packet_length = int.from_bytes(header[2:4], 'little')
 
         if packet_type.name == "contents":
-            packet_counter = int.from_bytes(header[8:10], 'little')
+            file_id = packet[4:8]
+            print(f"  ID:          {self.to_hex(file_id, 4)}")
+
+            file_part = int.from_bytes(header[8:10], 'little')
+
+            if self.dump:
+                self.dump.write(packet)
+                self.dump.flush()
         
         elif packet_type.name == "info":
+            file_id = packet[4:8]
+
             file_name = packet[84:]
             file_name = file_name[:file_name.index(b'\x00')]
             file_name = file_name.decode('utf-8')
@@ -77,6 +86,8 @@ class Assembler:
             file_path = packet[188:]
             file_path = file_path[:file_path.index(b'\x00')]
             file_path = file_path.decode('utf-8')
+
+            data_length = packet[8]
 
             transmit_time = datetime.utcfromtimestamp(
                 int.from_bytes(packet[60:64], 'little')
@@ -89,13 +100,10 @@ class Assembler:
             print( "[FILE INFO]")
             print(f"  NAME:        {file_name}")
             print(f"  PATH:        {file_path}")
-            print(f"  CREATED:     {creation_time.strftime('%Y-%m-%d %H:%M:%S')}")
-            print(f"  TRANSMITTED: {transmit_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"  ID:          {self.to_hex(file_id, 4)}")
+            print(f"  CREATED:     {creation_time.strftime('%Y-%m-%d %H:%M:%S')} UTC")
+            print(f"  TRANSMITTED: {transmit_time.strftime('%Y-%m-%d %H:%M:%S')} UTC")
             print()
-
-            if self.dump:
-                self.dump.write(packet)
-                self.dump.flush()
 
 
     def push(self, packet):
