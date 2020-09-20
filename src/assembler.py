@@ -23,6 +23,7 @@ class Assembler:
         self.stop = False       # Core thread stop flag
         self.rxq = deque()      # Data receive queue
         self.dump = dump        # Packet dump file
+        self.files = {}         # File list
 
         # Setup core assembler thread
         assembler_thread = Thread()
@@ -87,18 +88,22 @@ class Assembler:
         """
 
         file_id = int.from_bytes(packet[4:8], 'little')
-        file_name = self.get_string(packet[84:])
-        file_path = self.get_string(packet[188:])
-        packet_data_length = packet[8]
-        file_tx_time = self.get_time(packet[60:64])
-        file_creation_time = self.get_time(packet[164:168])
+        data_field_len = packet[8]
+        total_file_parts = int.from_bytes(packet[72:74], 'little')
 
-        print( "[FILE INFO]")
-        print(f"  ID:          {self.to_hex(file_id, 4)}")
-        print(f"  NAME:        {file_name}")
-        print(f"  CREATED:     {file_creation_time[1]}")
-        print(f"  TRANSMITTED: {file_tx_time[1]}")
-        print()
+        # Check if file ID already exists
+        if self.files.get(file_id) == None:
+            # Create new file object
+            self.files[file_id] = {
+                "name":  self.get_string(packet[84:]),
+                "path":  self.get_string(packet[188:]),
+                "time1": self.get_time(packet[60:64]),
+                "time2": self.get_time(packet[164:168]),
+                "parts": total_file_parts,
+                "payload": b''
+            }
+
+            print(f"\n\n\n[NEW FILE] \"{self.files[file_id]['name']}\"")
 
 
     def push(self, packet):
