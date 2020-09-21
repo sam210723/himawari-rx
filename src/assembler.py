@@ -92,11 +92,10 @@ class Assembler:
 
         # Check if all parts have been received
         if file_part == (self.files[file_id]['parts'] - 1):
-            if "IMG_DK01VIS_202007060930_005" in self.files[file_id]['name']:
-                f = open(f"received/{self.files[file_id]['name']}", "wb")
-                f.write(self.files[file_id]['payload'])
-                f.close()
-                print("Saved")
+            f = open(f"received/{self.files[file_id]['name']}", "wb")
+            f.write(self.files[file_id]['payload'])
+            f.close()
+            print("Saved")
         
         print(".", end="", flush=False)
 
