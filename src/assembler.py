@@ -92,10 +92,11 @@ class Assembler:
 
         # Check if all parts have been received
         if file_part == (self.files[file_id]['parts'] - 1):
-            f = open(f"received/{self.files[file_id]['name']}", "wb")
+            f = open(f"received/{self.files[file_id]['name'][:-4]}.hrit.bz2", "wb")
             f.write(self.files[file_id]['payload'])
             f.close()
             print("Saved")
+            del self.files[file_id]
         
         print(".", end="", flush=False)
 
