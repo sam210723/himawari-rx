@@ -78,6 +78,7 @@ class File:
             return False
         
         self.payload = decomp
+        self.length = len(self.payload)
         self.compressed = False
 
         return True
