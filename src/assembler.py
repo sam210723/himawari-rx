@@ -52,7 +52,7 @@ class Assembler:
                 continue
             
             # Parse primary packet header
-            packet_type = self.parse_primary(packet)
+            packet_type = PacketType(packet[1]).name
 
             # Parse packet data
             if   packet_type == "contents": self.parse_file_contents(packet)
@@ -63,42 +63,24 @@ class Assembler:
             return
 
 
-    def parse_primary(self, packet):
-        """
-        Parse primary packet header
-        """
-
-        packet_header = packet[:10]
-        packet_type = PacketType(packet_header[1])
-        packet_length = int.from_bytes(packet_header[2:4], 'little')
-
-        return packet_type.name
-
-
     def parse_file_contents(self, packet):
         """
         Parse file contents packet
         """
 
-        file_id = int.from_bytes(packet[4:8], 'little')
-        file_part = int.from_bytes(packet[8:10], 'little')
+        # Get packet UID and length
+        uid = self.get_int(packet[4:8])
+        length = self.get_int(packet[2:4])
         
         # Ignore parts without associated file
-        if self.files.get(file_id) == None: return
+        if self.files.get(uid) == None: return
         
         # Append data to file payload
-        self.files[file_id].payload += packet[16:]
-
-        #if self.dump != None:
-            #if "IR1" in self.files[file_id]['name']: self.dump.write(packet)
+        self.files[uid].add(packet)
 
         # Check if all parts have been received
-        if file_part == (self.files[file_id].parts - 1):
-            #f = open(f"received/{self.files[file_id].name}.hrit.bz2", "wb")
-            #f.write(self.files[file_id].payload)
-            #f.close()
-            print("Saved")
-            del self.files[file_id]
+        if self.files[uid].complete:
+            del self.files[uid]
         
         print(".", end="", flush=False)
 
@@ -108,7 +90,9 @@ class Assembler:
         Parse file info packet
         """
 
+        # Get packet UID and length
         uid = self.get_int(packet[4:8])
+        length = self.get_int(packet[2:4])
         #data_field_len = packet[8]
 
         # Check if file ID already exists
