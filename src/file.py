@@ -19,7 +19,9 @@ class File:
 
         self.payload = b''
         self.complete = False
-    
+
+        if self.ext == "bz2": self.ext = "hrit.bz2"
+
 
     def add(self, data):
         """
