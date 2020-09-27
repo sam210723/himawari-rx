@@ -22,6 +22,7 @@ class File:
         self.complete = False
 
         if self.ext == "bz2": self.ext = "hrit.bz2"
+        if self.ext == "tar": self.ext = "txt.tar"
 
 
     def add(self, data):
@@ -29,8 +30,10 @@ class File:
         Add data to file payload
         """
 
+        # Append data to payload
         self.payload += data[16:]
 
+        # Check if last part has been received
         part = self.get_int(data[8:10])
         self.complete = part == (self.parts - 1)
 
@@ -38,17 +41,33 @@ class File:
 
 
     def save(self, path):
+        """
+        Save file payload to disk
+
+        Args:
+            path (str): Path to output directory
+
+        Returns:
+            bool: Save success flag
+        """
+
+        # Check payload length is correct (file content without FEC)
+        if len(self.payload) < self.length:
+            return False
+        
         with open(f"{path}\\{self.name}.{self.ext}", 'wb') as f:
             f.write(self.payload[:self.length])
             f.close()
-        print("\nSaved")
+
+        return True
+
 
     def print_info(self):
         """
         Print info about incoming file
         """
 
-        print(f"\n[NEW FILE] \"{self.name}\"\n")
+        print(f"\n[FILE] \"{self.name}\"")
 
 
     def get_int(self, data):
