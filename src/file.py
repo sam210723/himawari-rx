@@ -31,8 +31,7 @@ class File:
         self.payload += data[16:]
 
         part = self.get_int(data[8:10])
-        #self.complete = part == (self.parts - 1)
-        self.complete
+        self.complete = part == (self.parts - 1)
 
         return len(self.payload)
 
