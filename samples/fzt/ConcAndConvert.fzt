@@ -1,0 +1,133 @@
+//
+//	ConcAndConvert.fzt
+//  (2014/10/28, modified by RIKEI)
+//
+//	This script concatenates and converts HRIT files that are dropped into
+// 	HRIT_tmp folder into SATAID images.
+//	This script should be attached to the HRIT_tmp script folder (the script 
+//  folder should run in blocking file).
+//
+
+if(!IsDefined("$Filename"))
+{
+	LogError(LogTag()+"$Filename not defined.");
+	exit;
+}
+
+try
+{
+	string thisfile = FilenameFromPath($Filename);
+	
+	// Grab the base of the file and create an array in memory to hold the filename and path
+	string base = "S_"+LeftString(thisfile, StringLength(thisfile)-4);
+	string ext = RightString(thisfile, 3);
+
+	//  (2014/12/25, modified by RIKEI)
+	string dir = #"c:\HRIT_in\process" ;
+
+	string MemName = base+"[\""+ext+"\"]";
+	
+	LogDebug(LogTag()+" The following value will be stored in memory for 20 minutes: "+ MemName);
+	StorageSetValue(MemName, $Filename, 1200000);   //storing in memory for 20 minutes
+	string destpath;
+	string File1;
+	
+	// Build the SATAID file name
+	string dir = #"c:\HRIT_tmp\Process" ;
+	string finaldir = #"c:\SATAID_Image" ;
+	string hritconcfile = MakePath(dir, LeftString(thisfile, StringLength(thisfile)-4));
+
+	//modifyed by MSC(2015.1.27)
+	if( StringPatternMatchNoCase(MidString(thisfile, 8,4), "VIS_"))
+	{
+		string Sataidfilename = "VS" + MidString(thisfile, 12,8) + ".Z"+MidString(thisfile, 20,4);
+	}else if( StringPatternMatchNoCase(MidString(thisfile, 8,4), "IR1_"))
+	{
+		string Sataidfilename = "IR" + MidString(thisfile, 12,8) + ".Z"+MidString(thisfile, 20,4);
+	}else if( StringPatternMatchNoCase(MidString(thisfile, 8,4), "IR2_"))
+	{
+		string Sataidfilename = "I2" + MidString(thisfile, 12,8) + ".Z"+MidString(thisfile, 20,4);
+	}else if( StringPatternMatchNoCase(MidString(thisfile, 8,4), "IR3_"))
+	{
+		string Sataidfilename = "WV" + MidString(thisfile, 12,8) + ".Z"+MidString(thisfile, 20,4);
+	}else if( StringPatternMatchNoCase(MidString(thisfile, 8,4), "IR4_"))
+	{
+		string Sataidfilename = "I4" + MidString(thisfile, 12,8) + ".Z"+MidString(thisfile, 20,4);
+	}else
+	{
+		string Sataidfilename = MidString(thisfile, 8,4) + MidString(thisfile, 12,8) + ".Z"+MidString(thisfile, 20,4);
+	}	
+	
+	
+	// Create the path for the Sataid image
+	string sataidfile = MakePath(finaldir, Sataidfilename);
+	
+	// Check for 10 files
+	map StoredForThisBase = StorageGetValue(base);  //retrieve the entire array to check for completion
+	// Set the options map to execute the process
+	map options;
+	options["CollectOutput"] = 1;
+	options["Directory"] =#"C:\HRIT_tmp\Process";
+	
+	//start building arguments for running the concatenation program in commandline
+	string cmdline = "";
+	string cmdline2 = "";
+	string FirstProgram = "\"C:\\SATAID\\Program Files\\hritconcat.exe\" ";
+	string SecondProgram = "\"C:\\SATAID\\Program Files\\hrit2sataid.exe\" ";
+	string SataidFileini = "\"C:\\SATAID\\Program Files\\hrit2sataid.ini\" ";
+	cmdline = FirstProgram;
+	cmdline2 = SecondProgram;
+	
+	// If there are 10 filenames stored in memory then concatenate them and convert
+	if(Count(StoredForThisBase) == 10)
+	{
+		array of string Keys = GetKeys(StoredForThisBase);
+		for(i=0; i<Count(Keys);i++) 
+		{
+			// For each value in the array build the command line by adding an option
+			// format = -d(n)=filename_0[n] 
+			string ext2 = RightString(StoredForThisBase[Keys[i]], 1);
+			if(StringToInt(ext2) == 0)
+				string option = "-d"+"10"+"="+StoredForThisBase[Keys[i]]+" ";
+			else
+				string option = "-d"+ext2+"="+StoredForThisBase[Keys[i]]+" ";
+			
+			cmdline = cmdline + option;
+		}
+		cmdline = cmdline +"-o="+ hritconcfile;  //add output filepath
+	
+		// Concatenate files and check the result
+		map v = ExecuteProcess(cmdline, 1, 1, options);
+		LogNormal( LogTag() + " hritconcat.exe returned the following Exit Code: " + IntToString(v["ExitCode"]));
+		if(v["ExitCode"] > 64 || !FileExists(hritconcfile))	// Concatenation failed
+		{
+			LogError(LogTag() + "HRIT Concat did not work: "+ v["stderr"] + " Could not create file : " + hritconcfile);
+			exit;
+		}
+		
+		// Create sataidfile
+		cmdline2 = cmdline2 + hritconcfile+ " " + sataidfile +" " + SataidFileini + " ";
+		map u = ExecuteProcess(cmdline2, 1, 1, options);
+		LogNormal( LogTag() + " hrit2sataid.exe returned the following Exit Code: " + IntToString(u["ExitCode"]));
+	
+		if(u["ExitCode"] != 0)	//could not convert
+		{
+			LogError(LogTag() + "HRIT2SATAID did not work for this reason: "+ u["stderr"]);
+			exit;
+		}	
+	
+		// Delete source files
+		for (k = 0; k<Count(StoredForThisBase); k++)
+		{
+			DeleteFile(StoredForThisBase[Keys[k]]);
+		}
+		// Remove the variable in memory
+		StorageRemoveValue(base);
+	}
+}
+catch(string err)
+{
+	LogError(LogTag() + err);
+}
+	
+	

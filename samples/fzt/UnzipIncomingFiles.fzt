@@ -1,0 +1,125 @@
+//
+//	UnzipIncomingFiles.fzt
+//  (2014/10/30, modified by RIKEI)
+//  (2014/12/04, modified by RIKEI)
+//
+//  Unzips incoming files to default virtual path (/) based on file extension. 
+//	Moves the decompressed file into a directory specified by the virtual path ([Final root file path]:\[virtual file path]).
+//  
+//  For security settings the clients should have the following settings disabled: Allow network paths; Allow absolute paths
+// 
+
+
+if(!IsDefined("$MainFilePath")||!IsDefined("$RecvFileInfo"))
+{
+	LogError(LogTag()+"Input Variables were not found.");
+	exit;
+}
+
+//
+// Initialize variables
+//
+
+string sourcefile =  FilenameFromPath($MainFilePath);
+//string cmdline = bzipdir + $MainFilePath;
+string cmdline = "\"C:\\Program Files\\7-Zip\\7z.exe\" x -y " + $MainFilePath; // start of untar
+string copyfile;
+int FlagMoveFile = 0;
+
+//Set environmental variables for execute process
+map options;
+options["CollectOutput"] = 1;
+options["Directory"] =#"C:\Program Files\7-Zip\";
+map options2;
+options2["CollectOutput"] = 1;
+options2["Directory"] =#"C:\Program Files\7-Zip\";
+
+
+// Find the file extension to determine whether it needs to be decompressed
+// string ext = RightString($MainFilePath,7);
+string ext = RightString($MainFilePath,8);
+
+// else if(StringPatternMatchNoCase(ext, "*tar.bz2")) // If tar file
+if(StringPatternMatchNoCase(ext, "*.tar.bz2")) // (2014/10/30, modified by RIKEI)
+{
+	LogDebug(LogTag() + "Unzip then untar");
+	
+	cmdline = cmdline + " -oc:\\Temp" + DirectoryFromPath($RecvFileInfo[0]["VirtualFilePath"]);
+	map v = ExecuteProcess(cmdline, 1, 1, options);
+	string cmdline2 = "\"C:\\Program Files\\7-Zip\\7z.exe\" x -y ";
+	if (v["ExitCode"] == 0)
+	{
+		// Get filename of decompressed file
+		int total = StringLength($MainFilePath);
+		string tarfile = LeftString($MainFilePath, total-4);
+		// Command line argument for 
+		cmdline2 = cmdline2 + tarfile + " -oc:" + DirectoryFromPath($RecvFileInfo[0]["VirtualFilePath"]);
+		LogDebug(LogTag() + "untar file " + cmdline2);
+		map u = ExecuteProcess(cmdline2, 1, 1, options2);
+		Dump(u);
+		if(u["ExitCode"] == 0)
+		{
+			LogDebug(LogTag()+ " Untarred successfully");
+		}else
+		{
+			LogError(LogTag() + "Error occurred untarring file : " + $MainFilePath);
+			exit;
+		}
+	}
+	else
+	{
+		LogError(LogTag() + " Failed to decompress " + $MainFilePath);
+		exit;		
+	}
+
+}
+
+// if(StringPatternMatchNoCase(ext, "*[0-9].bz2")) // If bz2 file
+else if(StringPatternMatchNoCase(ext, "*.bz2")) //  (2014/10/30, modified by RIKEI)
+{
+	LogDebug(LogTag() + " Only unzip");
+	
+	cmdline = cmdline + " -oc:"+DirectoryFromPath($RecvFileInfo[0]["VirtualFilePath"]);
+	
+	map v = ExecuteProcess(cmdline, 1, 1, options);
+	
+	if(v["ExitCode"] == 0)
+	{
+		// Set Flag to Move decompressed file 
+		FlagMoveFile = 1; // (2014/12/04, added by RIKEI)
+		// Get filename of decompressed file
+		int Num = StringLength($MainFilePath)-4;
+		copyfile = LeftString($MainFilePath,Num);
+		int Num2 = StringLength($RecvFileInfo[0]["VirtualFilePath"])-4 ;
+		// Final file path
+		string virpath = LeftString($RecvFileInfo[0]["VirtualFilePath"],Num2);
+	}else
+	{
+		LogError(LogTag() + " Failed to decompress " + $MainFilePath);	
+		exit;
+	}
+}
+
+else // other files (MANAM or Heartbeat etc)
+{
+	LogDebug(LogTag() + "no action");
+	
+//  (2014/10/30, modified by RIKEI)
+//	if(StringPatternMatchNoCase($RecvFileInfo[0]["VirtualFilePath"], "*MANAM*"))
+//	{
+		FlagMoveFile = 1;
+		copyfile = $MainFilePath;
+		// Final file path
+		string virpath = $RecvFileInfo[0]["VirtualFilePath"];
+//	}
+}
+
+// After unzipping in temp directory move to the destination folder
+if(FlagMoveFile == 1)
+{
+	//Move unzipped file into the correct directory
+	string destfile = "C:"+virpath;
+	MoveFile(copyfile,destfile);
+}else{
+	DeleteFile($MainFilePath);
+}

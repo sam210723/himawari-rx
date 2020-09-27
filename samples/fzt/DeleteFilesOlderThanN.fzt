@@ -1,0 +1,55 @@
+//
+//	DeleteFilesOlderThanN.fzt
+//
+//	This Script checks the specified folder for Files that were created more than "n" hours ago
+//	and deletes them.  The folder to be cleaned up and the value for "n" are provided by the user before 
+//	running the script
+// 	This Script should be installed as a task that is run on command from the web interface.
+
+// created by Kencast on 2014/2/25
+// modified by Rikei on 2014/11/17
+
+
+//	Check Initialization String is defined
+
+if(!IsDefined("$FolderName") || !IsDefined("$ExpireTime"))
+{
+	LogError(LogTag() + " Check your Initialization String");
+}
+
+//	List all files in the specified directory
+array of string files;
+int NumFilesDeleted = 0;
+//	Set the time to delete before 
+int FlagTime = CurrentTime() - TimeSpanToInt($ExpireTime);
+
+// modified by Rikei on 2014/11/14
+// LogNormal(LogTag() + "delete all files older than :" + TimeToString(FlagTime, "%Y%m%d%H%M"));
+LogDebug(LogTag() + "delete all files older than :" + TimeToString(FlagTime, "%Y%m%d%H%M") + " is tried");
+//
+
+//	For each file in the specified folder, check the creation time if its older than the specified expiration date
+//	delete the file
+// 	After every file is checked.  The script will also report how many files were deleted
+
+for(j =0 ;j <Count($FolderName);j++)
+{
+	files = FilesInDirectory($FolderName[j]);
+	for(i = 0; i<Count(files); i++)
+	{
+		map stats = FileStats(files[i]);
+		if(stats["ctime"] <= FlagTime)
+		{
+			DeleteFile(files[i]);
+			LogDebug( files[i] + " was deleted");
+			NumFilesDeleted++;
+		}
+	}
+// modified by Rikei on 2014/11/17
+//	LogNormal(LogTag() + IntToString(NumFilesDeleted) + " files deleted from " + $FolderName[j]);
+	if( NumFilesDeleted > 0)
+	{
+		LogNormal(LogTag() + "deleted " + IntToString(NumFilesDeleted) + " files older than " + TimeToString(FlagTime, "%Y/%m/%d %H:%M") + " from " + $FolderName[j]);
+	}
+//
+}	
