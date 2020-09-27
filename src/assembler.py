@@ -9,6 +9,8 @@ from enum import Enum
 from threading import Thread
 from time import sleep
 
+from file import File
+
 class Assembler:
     """
     Coordinates assembly of bz2 files from UDP frames.
@@ -23,7 +25,7 @@ class Assembler:
         self.stop = False       # Core thread stop flag
         self.rxq = deque()      # Data receive queue
         self.dump = dump        # Packet dump file
-        self.files = {}         # File list
+        self.files = {}         # File object list
 
         # Setup core assembler thread
         assembler_thread = Thread()
@@ -85,16 +87,16 @@ class Assembler:
         if self.files.get(file_id) == None: return
         
         # Append data to file payload
-        self.files[file_id]['payload'] += packet[16:]
+        self.files[file_id].payload += packet[16:]
 
         #if self.dump != None:
             #if "IR1" in self.files[file_id]['name']: self.dump.write(packet)
 
         # Check if all parts have been received
-        if file_part == (self.files[file_id]['parts'] - 1):
-            f = open(f"received/{self.files[file_id]['name'][:-4]}.hrit.bz2", "wb")
-            f.write(self.files[file_id]['payload'])
-            f.close()
+        if file_part == (self.files[file_id].parts - 1):
+            #f = open(f"received/{self.files[file_id].name}.hrit.bz2", "wb")
+            #f.write(self.files[file_id].payload)
+            #f.close()
             print("Saved")
             del self.files[file_id]
         
@@ -106,23 +108,20 @@ class Assembler:
         Parse file info packet
         """
 
-        file_id = int.from_bytes(packet[4:8], 'little')
-        data_field_len = packet[8]
-        total_file_parts = int.from_bytes(packet[72:74], 'little')
+        uid = self.get_int(packet[4:8])
+        #data_field_len = packet[8]
 
         # Check if file ID already exists
-        if self.files.get(file_id) == None:
+        if self.files.get(uid) == None:
             # Create new file object
-            self.files[file_id] = {
-                "name":  self.get_string(packet[84:]),
-                "path":  self.get_string(packet[188:]),
-                "time1": self.get_time(packet[60:64]),
-                "time2": self.get_time(packet[164:168]),
-                "parts": total_file_parts,
-                "payload": b''
-            }
-
-            print(f"\n\n\n[NEW FILE] \"{self.files[file_id]['name']}\"")
+            self.files[uid] = File(
+                name   = self.get_string(packet[84:]),
+                path   = self.get_string(packet[188:]),
+                parts  = self.get_int(packet[72:74]),
+                time_a = self.get_time(packet[164:168]),
+                time_b = self.get_time(packet[60:64])
+            )
+            self.files[uid].print_info()
 
 
     def push(self, packet):
@@ -179,6 +178,14 @@ class Assembler:
         s = dt.strftime('%Y-%m-%d %H:%M:%S UTC')
 
         return dt, s
+
+
+    def get_int(self, data):
+        """
+        Get integer from bytes
+        """
+
+        return int.from_bytes(data, 'little')
 
 
 class PacketType(Enum):
