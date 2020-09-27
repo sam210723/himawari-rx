@@ -3,6 +3,8 @@ file.py
 https://github.com/sam210723/himawari-rx
 """
 
+import bz2
+
 class File:
     """
     Incoming file object containing file properties and payload
@@ -20,9 +22,7 @@ class File:
 
         self.payload = b''
         self.complete = False
-
-        if self.ext == "bz2": self.ext = "hrit.bz2"
-        if self.ext == "tar": self.ext = "txt.tar"
+        self.compressed = True
 
 
     def add(self, data):
@@ -55,11 +55,47 @@ class File:
         if len(self.payload) < self.length:
             return False
         
-        with open(f"{path}\\{self.name}.{self.ext}", 'wb') as f:
+        with open(self.get_save_path(path), 'wb') as f:
             f.write(self.payload[:self.length])
             f.close()
 
         return True
+
+
+    def decompress(self):
+        """
+        Decompress bz2 file payload
+        """
+
+        # Check payload length is correct (file content without FEC)
+        if len(self.payload) < self.length:
+            return False
+        
+        try:
+            decomp = bz2.decompress(self.payload[:self.length])
+        except Exception:
+            return False
+        
+        self.payload = decomp
+        self.compressed = False
+
+        return True
+
+
+    def get_save_path(self, path):
+        """
+        Get save path for file based on name and extension
+        """
+
+        if self.name[:4] == "IMG_":
+            if self.compressed:
+                self.ext = "hrit.bz2"
+            else:
+                self.ext = "hrit"
+        elif self.ext == "tar":
+            self.ext = "txt.tar"
+
+        return f"{path}\\{self.name}.{self.ext}"
 
 
     def print_info(self):

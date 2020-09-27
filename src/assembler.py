@@ -14,7 +14,7 @@ from file import File
 
 class Assembler:
     """
-    Coordinates assembly of bz2 files from UDP frames.
+    Coordinates assembly of files (bz2 / images / text) from UDP frames.
     """
 
     def __init__(self, dump, path, fmt):
@@ -88,20 +88,31 @@ class Assembler:
 
         # Check if last part has been received
         if self.files[uid].complete:
-            # Output format is compressed bz2
-            if self.format == "bz2":
-                if self.files[uid].save(self.path):
-                    print(Fore.GREEN + Style.BRIGHT + "    SAVED")
-                else:
-                    print("    " + Fore.WHITE + Back.RED + Style.BRIGHT + "SKIPPING FILE: NOT ENOUGH DATA")
             
-            # Output format is HRIT file
-            elif self.format == "hrit":
-                pass
+            # Output format is uncompressed
+            if self.format != "bz2":
+                # Decompress file payload
+                if not self.files[uid].decompress():
+                    print("    " + Fore.WHITE + Back.RED + Style.BRIGHT + "DECOMPRESSION FAILED")
+                    del self.files[uid]
+                    return
+
+                # Save file to disk after decompression
+                if self.format == "decompressed":
+                    ok = self.files[uid].save(self.path)
+                
+                # Generate image from decompressed payload
+                elif any(fmt in self.format for fmt in ['png', 'jpg', 'bmp']):
+                    pass
+            else:
+                # Save compressed payload to disk
+                ok = self.files[uid].save(self.path)
             
-            # Output format is an image
-            elif any(fmt in self.format for fmt in ['png', 'jpg', 'bmp']):
-                pass
+            # Check save operation was successful
+            if ok:
+                print(Fore.GREEN + Style.BRIGHT + "    SAVED bz2")
+            else:
+                print("    " + Fore.WHITE + Back.RED + Style.BRIGHT + "SAVE FAILED")
             
             # Remove file object from list
             del self.files[uid]
