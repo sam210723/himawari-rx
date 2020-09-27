@@ -40,7 +40,8 @@ class HimawariRX:
             self.dumpf = None
 
         self.assembler = Assembler(
-            self.dumpf
+            self.dumpf,
+            self.config['rx']['path']
         )
 
         # Check assembler thread is ready

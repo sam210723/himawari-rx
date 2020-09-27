@@ -16,7 +16,7 @@ class Assembler:
     Coordinates assembly of bz2 files from UDP frames.
     """
 
-    def __init__(self, dump):
+    def __init__(self, dump, path):
         """
         Initialises assembler class
         """
@@ -25,6 +25,7 @@ class Assembler:
         self.stop = False       # Core thread stop flag
         self.rxq = deque()      # Data receive queue
         self.dump = dump        # Packet dump file
+        self.path = path        # File output path
         self.files = {}         # File object list
 
         # Setup core assembler thread
@@ -84,9 +85,8 @@ class Assembler:
 
         # Check if all parts have been received
         if self.files[uid].complete:
+            self.files[uid].save(self.path)
             del self.files[uid]
-        
-        print(".", end="", flush=False)
 
 
     def parse_file_info(self, packet):
