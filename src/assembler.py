@@ -52,14 +52,14 @@ class Assembler:
                 sleep(10 / 1000)
                 continue
             
-            # Parse primary packet header
+            # Get packet type
             packet_type = PacketType(packet[1]).name
 
             # Dump packet to file if enabled
             if self.dump != None:
                 self.dump.write(packet)
 
-            # Parse packet data
+            # Parse packet data based on packet type
             if   packet_type == "contents": self.parse_file_contents(packet)
             elif packet_type == "info":     self.parse_file_info(packet)
         
