@@ -88,7 +88,7 @@ class Assembler:
 
         # Check if last part has been received
         if self.files[uid].complete:
-            
+
             # Output format is uncompressed
             if self.format != "bz2":
                 # Decompress file payload
@@ -110,7 +110,7 @@ class Assembler:
             
             # Check save operation was successful
             if ok:
-                print(Fore.GREEN + Style.BRIGHT + "    SAVED bz2")
+                print(Fore.GREEN + Style.BRIGHT + "    SAVED")
             else:
                 print("    " + Fore.WHITE + Back.RED + Style.BRIGHT + "SAVE FAILED")
             

@@ -4,6 +4,7 @@ https://github.com/sam210723/himawari-rx
 """
 
 import bz2
+import pathlib
 
 class File:
     """
@@ -87,15 +88,22 @@ class File:
         Get save path for file based on name and extension
         """
 
-        if self.name[:4] == "IMG_":
+        if self.name[:3] == "IMG":
+            name_split = self.name.split("_")
+            date = name_split[2][:8]
+            time = name_split[2][8:]
+
             if self.compressed:
                 self.ext = "hrit.bz2"
             else:
                 self.ext = "hrit"
+            
+            pathlib.Path(f"{path}\\{date}\\{time}").mkdir(parents=True, exist_ok=True)
+            return f"{path}\\{date}\\{time}\\{self.name}.{self.ext}"
+
         elif self.ext == "tar":
             self.ext = "txt.tar"
-
-        return f"{path}\\{self.name}.{self.ext}"
+            return f"{path}\\{self.name}.{self.ext}"
 
 
     def print_info(self):
