@@ -75,9 +75,9 @@ class Assembler:
 
         # Get packet UID and length
         uid = self.get_int(packet[4:8])
-        length = self.get_int(packet[2:4])
+        # length = self.get_int(packet[2:4])    # Always 1427 bytes
         
-        # Ignore parts without associated file
+        # Ignore parts without associated file object
         if self.files.get(uid) == None: return
         
         # Append data to file payload
@@ -96,8 +96,7 @@ class Assembler:
 
         # Get packet UID and length
         uid = self.get_int(packet[4:8])
-        length = self.get_int(packet[2:4])
-        #data_field_len = packet[8]
+        #length = self.get_int(packet[2:4])     # Always 242 bytes
 
         # Check if file ID already exists
         if self.files.get(uid) == None:
