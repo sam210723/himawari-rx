@@ -58,6 +58,7 @@ class Assembler:
             # Dump packet to file if enabled
             if self.dump != None:
                 self.dump.write(packet)
+                self.dump.flush()
 
             # Parse packet data based on packet type
             if   packet_type == "contents": self.parse_file_contents(packet)
