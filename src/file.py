@@ -18,11 +18,34 @@ class File:
         self.time_diff = time_b[0] - time_a[0]
 
         self.payload = b''
+        self.complete = False
+    
+
+    def add(self, data):
+        """
+        Add data to file payload
+        """
+
+        self.payload += data[16:]
+
+        part = self.get_int(data[8:10])
+        #self.complete = part == (self.parts - 1)
+        self.complete
+
+        return len(self.payload)
 
 
     def print_info(self):
         """
         Print info about incoming file
         """
-        
+
         print(f"\n[NEW FILE] \"{self.name}\"\n")
+
+
+    def get_int(self, data):
+        """
+        Get integer from bytes
+        """
+
+        return int.from_bytes(data, 'little')
