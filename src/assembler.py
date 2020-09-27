@@ -106,6 +106,7 @@ class Assembler:
                 name   = self.get_string(packet[84:]),
                 path   = self.get_string(packet[188:]),
                 parts  = self.get_int(packet[72:74]),
+                length = self.get_int(packet[172:176]),
                 time_a = self.get_time(packet[164:168]),
                 time_b = self.get_time(packet[60:64])
             )

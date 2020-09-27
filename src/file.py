@@ -8,11 +8,12 @@ class File:
     Incoming file object containing file properties and payload
     """
 
-    def __init__(self, name, path, parts, time_a, time_b):
+    def __init__(self, name, path, parts, length, time_a, time_b):
         self.name      = name.split('.')[0]
         self.ext       = name.split('.')[1]
         self.path      = path
         self.parts     = parts
+        self.length    = length
         self.time_a    = time_a
         self.time_b    = time_b
         self.time_diff = time_b[0] - time_a[0]
@@ -38,7 +39,7 @@ class File:
 
     def save(self, path):
         with open(f"{path}\\{self.name}.{self.ext}", 'wb') as f:
-            f.write(self.payload)
+            f.write(self.payload[:self.length])
             f.close()
         print("\nSaved")
 
