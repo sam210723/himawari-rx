@@ -36,6 +36,12 @@ class File:
         return len(self.payload)
 
 
+    def save(self, path):
+        with open(f"{path}\\{self.name}.{self.ext}", 'wb') as f:
+            f.write(self.payload)
+            f.close()
+        print("\nSaved")
+
     def print_info(self):
         """
         Print info about incoming file
