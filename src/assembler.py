@@ -4,6 +4,7 @@ https://github.com/sam210723/himawari-rx
 """
 
 from collections import deque
+from colorama import Fore, Back, Style
 from datetime import datetime
 from enum import Enum
 from threading import Thread
@@ -89,7 +90,10 @@ class Assembler:
         if self.files[uid].complete:
             # Output format is compressed bz2
             if self.format == "bz2":
-                self.files[uid].save(self.path)
+                if self.files[uid].save(self.path):
+                    print(Fore.GREEN + Style.BRIGHT + "    SAVED")
+                else:
+                    print("    " + Fore.WHITE + Back.RED + Style.BRIGHT + "SKIPPING FILE: NOT ENOUGH DATA")
             
             # Output format is HRIT file
             elif self.format == "hrit":
