@@ -41,7 +41,8 @@ class HimawariRX:
 
         self.assembler = Assembler(
             self.dumpf,
-            self.config['rx']['path']
+            self.config['rx']['path'],
+            self.config['rx']['format']
         )
 
         # Check assembler thread is ready
@@ -131,13 +132,19 @@ class HimawariRX:
 
         opts = {
             "rx": {
-                "path": Path(cfgp.get('rx', 'path'))
+                "path": Path(cfgp.get('rx', 'path')),
+                "format": cfgp.get('rx', 'format')
             },
             "udp": {
                 "ip":   cfgp.get('udp', 'ip'),
                 "port": cfgp.getint('udp', 'port')
             }
         }
+
+        # Check output format is valid
+        if opts['rx']['format'] not in ['bz2', 'hrit', 'png', 'jpg', 'bmp']:
+            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"INVALID OUTPUT FORMAT \"{opts['rx']['format']}\"")
+            self.safe_stop()
 
         return opts
 
@@ -147,9 +154,10 @@ class HimawariRX:
         Print configuration information
         """
 
+        print(f"CONFIG FILE:    {self.args.config}")
         print(f"UDP INPUT:      {self.config['udp']['ip']}:{self.config['udp']['port']}")
         print(f"OUTPUT PATH:    {self.config['rx']['path'].absolute()}")
-        print(f"CONFIG FILE:    {self.args.config}\n")
+        print(f"OUTPUT FORMAT:  {self.config['rx']['format']}\n")
 
 
     def safe_stop(self, message=True):
@@ -158,7 +166,11 @@ class HimawariRX:
         """
 
         self.stop = True
-        self.assembler.stop = True
+
+        try:
+            self.assembler.stop = True
+        except AttributeError:
+            pass
         
         if self.args.dump != None:
             self.dumpf.close()

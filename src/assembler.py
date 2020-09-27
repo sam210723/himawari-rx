@@ -16,7 +16,7 @@ class Assembler:
     Coordinates assembly of bz2 files from UDP frames.
     """
 
-    def __init__(self, dump, path):
+    def __init__(self, dump, path, fmt):
         """
         Initialises assembler class
         """
@@ -26,6 +26,7 @@ class Assembler:
         self.rxq = deque()      # Data receive queue
         self.dump = dump        # Packet dump file
         self.path = path        # File output path
+        self.format = fmt       # File output format
         self.files = {}         # File object list
 
         # Setup core assembler thread
@@ -84,9 +85,21 @@ class Assembler:
         # Append data to file payload
         self.files[uid].add(packet)
 
-        # Check if all parts have been received
+        # Check if last part has been received
         if self.files[uid].complete:
-            self.files[uid].save(self.path)
+            # Output format is compressed bz2
+            if self.format == "bz2":
+                self.files[uid].save(self.path)
+            
+            # Output format is HRIT file
+            elif self.format == "hrit":
+                pass
+            
+            # Output format is an image
+            elif any(fmt in self.format for fmt in ['png', 'jpg', 'bmp']):
+                pass
+            
+            # Remove file object from list
             del self.files[uid]
 
 
