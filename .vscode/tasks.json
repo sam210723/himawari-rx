@@ -6,7 +6,12 @@
         {
             "label": "Run himawari-rx",
             "type": "shell",
-            "command": "python src/himawari-rx.py --config src/himawari-rx.ini"
+            "command": "cd src | python himawari-rx.py --config himawari-rx.ini"
+        },
+        {
+            "label": "Run himawari-rx (with dump)",
+            "type": "shell",
+            "command": "cd src | python himawari-rx.py --config himawari-rx.ini --dump packets.bin"
         }
     ]
 }

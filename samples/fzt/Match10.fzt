@@ -1,0 +1,69 @@
+// 
+//	Match10.fzt
+//  (2014/10/24, modified by RIKEI)
+//	
+//	Scripts associated with script folder to detect if 10 files with a given 
+//	filename pattern exists in a given folder.
+//	Once 10 files detected, move those 10 files to a temp script folder
+//	
+
+if(!IsDefined("$Filename"))
+{
+	LogError(LogTag()+"$Filename not defined.");
+	exit;
+}
+
+string thisfile = FilenameFromPath($Filename);
+
+try
+{
+	//grab the base of the file and create an array in memory to hold the filename and path
+	string base = LeftString(thisfile, StringLength(thisfile)-4);
+	string ext = RightString(thisfile, 3);
+	string dir = #"c:\HRIT_in\process" ;
+	string MemName = base+"[\""+ext+"\"]";
+	
+	// Store last filename to keep track of files for 40 minutes
+	LogDebug(LogTag()+" The following value will be stored in memory for 20 minutes: "+ MemName);
+	StorageSetValue(MemName, $Filename, 2820000);
+	
+	string tempdir = #"c:\HRIT_tmp";
+	string destpath;
+	string File1;
+	
+	// Add RIKEI (2014/10/24)
+	string savedir = #"c:\HRIT";
+	string savepath;
+	string soupath;
+	savepath = MakePath(savedir, thisfile);
+	soupath = MakePath(dir, thisfile);
+	LogDebug(LogTag()+" The file will be moved to: "+ savepath);
+	if(!CopyFile(soupath, savepath))
+	{
+		LogError(LogTag()+"Copy Failed to: "+ soupath);
+	}
+	// END of add RIKEI
+	
+	map StoredForThisBase = StorageGetValue(base);  //retrieve the entire array to check for completion
+	
+	// If there are 10 filenames stored in memory, move the files into HRIT_tmp
+	if(Count(StoredForThisBase) == 10)
+	{
+		array of string Keys = GetKeys(StoredForThisBase);
+		for(i=0; i<Count(Keys);i++)
+		{
+			File1 = FilenameFromPath(StoredForThisBase[Keys[i]]);
+			destpath = MakePath(tempdir, File1);
+			LogDebug(LogTag()+" The file will be moved to: "+destpath);
+			if(!MoveFile(StoredForThisBase[Keys[i]], destpath))
+			{
+				LogError(LogTag()+"Move Failed. Please turn debug logging on to trace the problem");
+			}
+		}
+		// After moving remove the array from memory
+		StorageRemoveValue(base);
+	}
+}catch(string err)
+{
+	LogError(LogTag() + err);
+}

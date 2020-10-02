@@ -1,0 +1,135 @@
+// 
+//		ConcatenateAnyway.fzt
+//  (2014/10/28, modified by RIKEI)
+//
+//	This script checks the memory for all files that have arrived.
+//	If all 10 files have not arrived within 45 minutes, concatenate anyway.
+//	This should run as a task every minute.
+
+if(!IsDefined("$ExpTime"))
+{
+	LogError( LogTag() + " Please define your initialization string");
+	exit;	
+}	
+
+
+array StoredValue = StorageEnumerateValues("IMG_");
+//  Setting Time Parameter for time evaluation
+int now = CurrentTime() - TimeSpanToInt($ExpTime);
+string Comptime = TimeToString(now, "%Y%m%d%H%M", "u");
+
+array of string segment = {"1", "2", "3", "4", "5", "6", "7", "8", "9","10"};
+
+// Settign directories for 
+string dir = #"c:\HRIT_tmp\Process" ;
+string finaldir = #"c:\SATAID_Image" ;
+
+// Setup for concatenation and stuff
+//
+	// Set the options map to execute the process
+	map options;
+	options["CollectOutput"] = 1;
+
+	//  (2014/10/28, modified by RIKEI)
+	options["Directory"] =#"C:\HRIT_in\Process";
+	
+	//start building arguments for running the concatenation program in commandline
+	string cmdline = "";
+	string cmdline2 = "";
+	string FirstProgram = "\"C:\\SATAID\\Program Files\\hritconcat.exe\"";
+	string SecondProgram = "\"C:\\SATAID\\Program Files\\hrit2sataid.exe\"";
+	string SataidFileini = "\"C:\\SATAID\\Program Files\\hrit2sataid.ini\"";
+
+LogNormal( LogTag() + " Concatenating all files older than :" + Comptime);
+	for(i= 0; i< Count(StoredValue); i++)
+	{
+		//	for each different name, check whether it has ten files, if it does, then the script folder dealt with it
+		// 	if not, then check for delay 
+		if(Count(StoredValue[i]["Value"]) < 10)
+		{
+			LogDebug(LogTag() + " Found an incomplete set of Files");
+			//	Check the Time of this folder
+			string Time = RightString(StoredValue[i]["Name"], 12);
+			LogDebug( LogTag() + " Concatenating all files older than :" + Comptime);
+			// reset the commandline strings before operation
+			
+			cmdline = FirstProgram;
+			cmdline2 = SecondProgram;
+			if(StringToInt(Time) < StringToInt(Comptime))
+			{
+				//  If the files are older than 45 minutes then concatenate them anyway
+				string thisfile = StoredValue[i]["Name"];
+				// Build the SATAID file name
+				string hritconcfile = MakePath(dir, thisfile);
+
+				//  modified by MSC(2015.1.27)
+				if( StringPatternMatchNoCase(MidString(thisfile, 8,4), "VIS_"))
+				{
+					string Sataidfilename = "VS" + MidString(thisfile, 12,8) + ".Z"+MidString(thisfile, 20,4);
+				}else if( StringPatternMatchNoCase(MidString(thisfile, 8,4), "IR1_"))
+				{
+					string Sataidfilename = "IR" + MidString(thisfile, 12,8) + ".Z"+MidString(thisfile, 20,4);
+				}else if( StringPatternMatchNoCase(MidString(thisfile, 8,4), "IR2_"))
+				{
+					string Sataidfilename = "I2" + MidString(thisfile, 12,8) + ".Z"+MidString(thisfile, 20,4);
+				}else if( StringPatternMatchNoCase(MidString(thisfile, 8,4), "IR3_"))
+					{
+					string Sataidfilename = "WV" + MidString(thisfile, 12,8) + ".Z"+MidString(thisfile, 20,4);
+				}else if( StringPatternMatchNoCase(MidString(thisfile, 8,4), "IR4_"))
+					{
+					string Sataidfilename = "I4" + MidString(thisfile, 12,8) + ".Z"+MidString(thisfile, 20,4);
+				}else
+				{
+					string Sataidfilename = MidString(thisfile, 8,4) + MidString(thisfile, 12,8) + ".Z"+MidString(thisfile, 20,4);
+				}
+	
+			
+				// Create the path for the Sataid image
+				string sataidfile = MakePath(finaldir, Sataidfilename);
+				LogDebug(LogTag() + " The Sataid File to be created is: " + sataidfile);
+				array of string Keys = GetKeys(StoredValue[i]["Value"]);
+				
+				//  hritconcat.exe will error out if it does not have an option of -d1, this if statement will ensure that there is an option even 
+				//  though the file does not exist.  This will cause the program to return ExitCode 50 which is acceptable fo rthe 2nd condition
+				
+				for(l=0; l<Count(segment)-1; l++){
+					int seg = StringToInt(segment[l]);
+					string option = " -d"+IntToString(seg)+"="+LeftString(StoredValue[i]["Value"][Keys[0]], StringLength(StoredValue[i]["Value"][Keys[0]])-1)+segment[l];
+					cmdline = cmdline+option;
+				}
+				string option = " -d10"+"="+LeftString(StoredValue[i]["Value"][Keys[0]], StringLength(StoredValue[i]["Value"][Keys[0]])-2)+segment[9];
+				cmdline = cmdline+option;
+				
+				cmdline = cmdline +" -o="+ hritconcfile;  //add output filepath	
+				LogDebug(LogTag() + " Command Line run: " + cmdline);
+				// Concatenate files and check the result
+				map v = ExecuteProcess(cmdline, 1, 1, options);
+				LogNormal( LogTag() + " hritconcat.exe returned the following Exit Code: " + IntToString(v["ExitCode"]));
+				if(v["ExitCode"] > 64 || !FileExists(hritconcfile))	// Concatenation failed
+				{
+					LogError(LogTag() + "HRIT Concat did not work: "+ v["stderr"] + " or Could not create file : " + hritconcfile);
+					exit;
+				}
+				
+				// Create sataidfile
+				cmdline2 = cmdline2 + " " + hritconcfile+ " " + sataidfile +" " + SataidFileini + " ";
+				map u = ExecuteProcess(cmdline2, 1, 1, options);
+				LogDebug(LogTag() + " Command Line run: " + cmdline2);
+				LogNormal( LogTag() + " hrit2sataid.exe returned the following Exit Code: " + IntToString(u["ExitCode"]));
+				if(u["ExitCode"]!=0)	//could not concatenate
+				{
+					LogError(LogTag() + "HRIT2SATAID did not work for this reason: "+ u["stderr"]);
+					exit;
+				}	
+			
+				// Delete source files
+				for (k = 0; k<Count(StoredValue[i]["Value"]); k++)
+				{
+					DeleteFile(StoredValue[i]["Value"][Keys[k]]);
+				}
+				// Remove the filename from memory to prevent duplication
+				StorageRemoveValue(StoredValue[i]["Name"]);
+			}
+		}
+	}
+
