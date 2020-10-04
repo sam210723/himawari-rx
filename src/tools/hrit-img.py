@@ -61,10 +61,10 @@ def init():
             
             # Create new group
             if name.full not in groups:
-                groups[name.full] = []
+                groups[name.full] = {}
 
             # Add image to group
-            groups[name.full].append(f)
+            groups[name.full][name.segment] = f
         
         # Print image list
         print(f"\nFound {len(groups)} images:")
@@ -95,13 +95,8 @@ def init():
 
         # Process each image group
         for i in groups:
-            if args.s:
-                for s in groups[i]:
-                    process_single(s)
-                    print()
-            else:
-                process_group(i, groups[i])
-                print()
+            process_group(i, groups[i])
+            print()
     
     # Input is a file
     else:
@@ -115,21 +110,23 @@ def process_group(name, group):
     
     print(f"{name}:")
 
-    images = []
+    images = {}
 
     # Create image from each file in group
-    for path in group:
-        i = process_single(path, False)
-        images.append(i)
+    for seg in group:
+        img = process_single(group[seg], False)
+        images[seg] = img
 
     # Create output image
-    h = images[0].height * total_segments
-    v = images[0].width
+    i = next(iter(images))
+    h = images[i].height * total_segments
+    v = images[i].width
     out_i = Image.new("L", (h, v))
 
     # Add segments to output image
-    for i, img in enumerate(images):
-        offset = img.height * i
+    for i in images:
+        img = images[i]
+        offset = img.height * (i - 1)
         out_i.paste(img, (0, offset))
     
     out_i.save(f"{args.INPUT}\\{name}.png", format="PNG")
