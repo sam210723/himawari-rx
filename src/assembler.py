@@ -55,7 +55,10 @@ class Assembler:
                 continue
             
             # Get packet type
-            packet_type = PacketType(packet[1]).name
+            try:
+                packet_type = PacketType(packet[1]).name
+            except ValueError:
+                print("\n" + Fore.WHITE + Back.RED + Style.BRIGHT + f"UNKNOWN PACKET TYPE: {packet[1]}")
 
             # Dump packet to file if enabled
             if self.dump != None:
