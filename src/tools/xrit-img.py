@@ -2,7 +2,7 @@
 hrit-img.py
 https://github.com/sam210723/himawari-rx
 
-Generates images from HRIT files
+Generates images from LRIT/HRIT files
 """
 
 import argparse
@@ -14,8 +14,8 @@ import numpy as np
 import os
 from PIL import Image
 
-argp = argparse.ArgumentParser(description="Generates images from HRIT files")
-argp.add_argument("INPUT", action="store", help="HRIT file (or folder) to process")
+argp = argparse.ArgumentParser(description="Generates images from LRIT/HRIT files")
+argp.add_argument("INPUT", action="store", help="xRIT file (or folder) to process")
 argp.add_argument("-s", action="store_true", help="Process incomplete images as individual segments")
 argp.add_argument("-o", action="store_true", help="Overwrite existing images")
 args = argp.parse_args()
@@ -40,13 +40,13 @@ def init():
 
     # Input is directory
     if os.path.isdir(args.INPUT):
-        for f in glob.glob(f"{args.INPUT}\\IMG_*.hrit"):
+        for f in glob.glob(f"{args.INPUT}\\IMG_*.*rit"):
             files.append(f)
         files.sort()
     
         # Check at least one file was found
         if len(files) < 1:
-            print(f"{Fore.WHITE}{Back.RED}{Style.BRIGHT}NO HRIT IMG FILES FOUND")
+            print(f"{Fore.WHITE}{Back.RED}{Style.BRIGHT}NO xRIT IMG FILES FOUND")
             print("Exiting...")
             exit(1)
         
