@@ -1,5 +1,5 @@
 """
-hrit-img.py
+xrit-img.py
 https://github.com/sam210723/himawari-rx
 
 Generates images from LRIT/HRIT files
