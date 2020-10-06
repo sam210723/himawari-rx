@@ -74,14 +74,10 @@ def process(r, g, b):
         print(f"  {i}: {images[i].size[0]}x{images[i].size[1]}")
     print()
 
-    # Find largest image resolution
-    l = 0
+    # Scale images to 2750px
+    l = 2750
     for i in images:
-        if images[i].size[0] > l: l = images[i].size[0]
-    
-    # Scale smaller images up to largest image size
-    for i in images:
-        if images[i].size[0] < l:
+        if images[i].size[0] != l:
             print(f"Scaling {i} channel...")
             images[i] = images[i].resize((l, l))
     print()
