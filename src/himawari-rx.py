@@ -12,6 +12,7 @@ from configparser import ConfigParser
 from pathlib import Path
 import socket
 import struct
+from time import time, sleep
 
 from assembler import Assembler
 
@@ -35,7 +36,7 @@ class HimawariRX:
 
         if self.args.dump != None:
             self.dumpf = open(self.args.dump, "wb")
-            print(Fore.GREEN + Style.BRIGHT + f"Opened packet output file: {self.args.dump}")
+            print(Fore.GREEN + Style.BRIGHT + f"Writing packets to: \"{self.args.dump}\"")
         else:
             self.dumpf = None
 
@@ -52,8 +53,15 @@ class HimawariRX:
 
         print("──────────────────────────────────────────────────────────────────────────────────")
 
+        # Reset stop flag
         self.stop = False
+
+        # Get processing start time
+        self.stime = time()
+
+        # Enter main loop
         self.loop()
+        self.safe_stop()
 
 
     def loop(self):
@@ -62,40 +70,80 @@ class HimawariRX:
         """
 
         while not self.stop:
-            try:
-                data, addr = self.sck.recvfrom(1427)
-                
-                # Push to assembler
-                self.assembler.push(data)
-            except Exception as e:
-                print(e)
-                self.safe_stop()
+            if self.args.file == None:
+                try:
+                    # Read packet from socket
+                    data, addr = self.sck.recvfrom(1427)
+                    
+                    # Push to assembler
+                    self.assembler.push(data)
+                except Exception as e:
+                    print(e)
+                    self.safe_stop()
+            else:
+                if not self.packetf.closed:
+                    # Read packet header from file
+                    header = self.packetf.read(6)
+
+                    # No more data to read from file
+                    if header == b'':
+                        self.packetf.close()
+                        continue
+
+                    # Get length of packet
+                    length = int.from_bytes(header[2:4], 'little') - 6
+
+                    # Read remaining bytes of packet from file and combine with header bytes
+                    packet = header + self.packetf.read(length)
+
+                    # Push to assembler
+                    self.assembler.push(packet)
+                else:
+                    # Assembler has all packets from file, wait for processing
+                    if self.assembler.complete():
+                        run_time = round(time() - self.stime, 3)
+                        print(f"\nFINISHED PROCESSING FILE ({run_time}s)")
+
+                        self.stop = True
+                    else:
+                        # Limit loop speed when waiting for assembler to finish processing
+                        sleep(0.5)
 
 
     def config_input(self):
         """
-        Configure UDP socket
+        Configure UDP socket or file input
         """
 
-        self.sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        ip = self.config['udp']['ip']
-        port = self.config['udp']['port']
+        if self.args.file == None:
+            self.sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            ip = self.config['udp']['ip']
+            port = self.config['udp']['port']
 
-        print(f"Binding UDP socket ({ip}:{port})...", end='')
+            print(f"Binding UDP socket ({ip}:{port})...", end='')
 
-        try:
-            # Bind socket
-            self.sck.bind(('', port))
+            try:
+                # Bind socket
+                self.sck.bind(('', port))
 
-            # Setup multicast
-            mreq = struct.pack("=4sl", socket.inet_aton(ip), socket.INADDR_ANY)
-            self.sck.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+                # Setup multicast
+                mreq = struct.pack("=4sl", socket.inet_aton(ip), socket.INADDR_ANY)
+                self.sck.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
-            print(Fore.GREEN + Style.BRIGHT + "SUCCESS")
-        except socket.error as e:
-            print(Fore.WHITE + Back.RED + Style.BRIGHT + "FAILED")
-            print(e)
-            self.safe_stop()
+                print(Fore.GREEN + Style.BRIGHT + "SUCCESS")
+            except socket.error as e:
+                print(Fore.WHITE + Back.RED + Style.BRIGHT + "FAILED")
+                print(e)
+                self.safe_stop()
+        else:
+            print(f"Opening packet file...", end='')
+            
+            if Path(self.args.file).exists():
+                self.packetf = open(self.args.file, 'rb')
+                print(Fore.GREEN + Style.BRIGHT + "SUCCESS")
+            else:
+                print(Fore.WHITE + Back.RED + Style.BRIGHT + "FILE DOES NOT EXIST")
+                self.safe_stop()
 
 
     def config_dirs(self):
@@ -116,6 +164,7 @@ class HimawariRX:
         argp = ArgumentParser()
         argp.description = "Receive weather images from geostationary satellite Himawari-8 (140.7˚E) via the HimawariCast service."
         argp.add_argument("--config", action="store", help="Configuration file path (.ini)", default="himawari-rx.ini")
+        argp.add_argument("--file", action="store", help="Path to packet file", default=None)
         argp.add_argument("-v", action="store_true", help="Enable verbose console output (only useful for debugging)", default=False)
         argp.add_argument("--dump", action="store", help="Path to packet output file")
         
@@ -155,7 +204,12 @@ class HimawariRX:
         """
 
         print(f"CONFIG FILE:    {self.args.config}")
-        print(f"UDP INPUT:      {self.config['udp']['ip']}:{self.config['udp']['port']}")
+        
+        if self.args.file == None:
+            print(f"UDP INPUT:      {self.config['udp']['ip']}:{self.config['udp']['port']}")
+        else:
+            print(f"FILE INPUT:     {self.args.file}")
+
         print(f"OUTPUT PATH:    {self.config['rx']['path'].absolute()}")
         print(f"OUTPUT FORMAT:  {self.config['rx']['format']}\n")
 

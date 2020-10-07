@@ -14,7 +14,7 @@ from file import File
 
 class Assembler:
     """
-    Coordinates assembly of files (bz2 / images / text) from UDP frames.
+    Coordinates assembly of files (bz2 / images / text) from packets.
     """
 
     def __init__(self, dump, path, fmt):
