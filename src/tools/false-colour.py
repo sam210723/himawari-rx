@@ -9,7 +9,6 @@ import argparse
 import colorama
 from colorama import Fore, Back, Style
 import glob
-import numpy as np
 from PIL import Image
 
 argp = argparse.ArgumentParser(description="Generates false colour images from multiple grayscale channels")
