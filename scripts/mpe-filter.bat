@@ -2,4 +2,5 @@
 title MPEG-TS MPE Re-transmitter
 
 REM Open input transport stream, slow bitrate down to actual off-air bitrate (3075700 bps), handle encapsulation and output UDP datagrams on 239.0.0.1:8001, then drop TS packets
-tsp -I file "E:\RF\HimawariCast\ts\154.0E_4148H_2586_(2020-07-06 0936 UTC)_FILTERED.ts" -P regulate --bitrate 3075700 -P mpe --pid 0x03E9 --udp-forward --log -O drop
+set out="%~1_FILTERED.ts"
+tsp -I file %1 -P filter --pid 0x03E9 -O file %out%
