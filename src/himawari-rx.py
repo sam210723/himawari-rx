@@ -60,8 +60,10 @@ class HimawariRX:
         self.stime = time()
 
         # Enter main loop
-        self.loop()
-        self.safe_stop()
+        try:
+            self.loop()
+        except KeyboardInterrupt:
+            self.safe_stop()
 
 
     def loop(self):
@@ -74,12 +76,12 @@ class HimawariRX:
                 try:
                     # Read packet from socket
                     data, addr = self.sck.recvfrom(1427)
-                    
-                    # Push to assembler
-                    self.assembler.push(data)
                 except Exception as e:
                     print(e)
                     self.safe_stop()
+                
+                # Push to assembler
+                self.assembler.push(data)
             else:
                 if not self.packetf.closed:
                     # Read packet header from file
@@ -234,8 +236,4 @@ class HimawariRX:
 
 
 if __name__ == "__main__":
-    try:
-        HimawariRX()
-    except KeyboardInterrupt:
-        print("Exiting...")
-        exit()
+    HimawariRX()
