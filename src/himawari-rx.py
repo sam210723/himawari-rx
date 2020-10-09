@@ -5,6 +5,7 @@ https://github.com/sam210723/himawari-rx
 Frontend for HimawariCast file assembler and image generator
 """
 
+import ast
 from argparse import ArgumentParser
 import colorama
 from colorama import Fore, Back, Style
@@ -43,7 +44,8 @@ class HimawariRX:
         self.assembler = Assembler(
             self.dumpf,
             self.config['rx']['path'],
-            self.config['rx']['format']
+            self.config['rx']['format'],
+            self.config['rx']['ignored_channels']
         )
 
         # Check assembler thread is ready
@@ -184,7 +186,8 @@ class HimawariRX:
         opts = {
             "rx": {
                 "path": Path(cfgp.get('rx', 'path')),
-                "format": cfgp.get('rx', 'format')
+                "format": cfgp.get('rx', 'format'),
+                "ignored_channels": cfgp.get('rx', 'ignored_channels')
             },
             "udp": {
                 "ip":   cfgp.get('udp', 'ip'),
@@ -196,6 +199,15 @@ class HimawariRX:
         if opts['rx']['format'] not in ['bz2', 'decompressed', 'png', 'jpg', 'bmp']:
             print(Fore.WHITE + Back.RED + Style.BRIGHT + f"INVALID OUTPUT FORMAT \"{opts['rx']['format']}\"")
             self.safe_stop()
+        
+        # If VCID blacklist is not empty
+        if opts['rx']['ignored_channels'] != "":
+            # Parse blacklist string into int or list
+            ignored_channels = ast.literal_eval(opts['rx']['ignored_channels'])
+
+            # If parsed into int, wrap int in list
+            if type(ignored_channels) == int: ignored_channels = [ignored_channels]
+            opts['rx']['ignored_channels'] = ignored_channels
 
         return opts
 
@@ -205,15 +217,25 @@ class HimawariRX:
         Print configuration information
         """
 
-        print(f"CONFIG FILE:    {self.args.config}")
+        print(f"CONFIG FILE:      {self.args.config}")
         
         if self.args.file == None:
-            print(f"UDP INPUT:      {self.config['udp']['ip']}:{self.config['udp']['port']}")
+            print(f"UDP INPUT:        {self.config['udp']['ip']}:{self.config['udp']['port']}")
         else:
-            print(f"FILE INPUT:     {self.args.file}")
+            print(f"FILE INPUT:       {self.args.file}")
 
-        print(f"OUTPUT PATH:    {self.config['rx']['path'].absolute()}")
-        print(f"OUTPUT FORMAT:  {self.config['rx']['format']}\n")
+        print(f"OUTPUT PATH:      {self.config['rx']['path'].absolute()}")
+        print(f"OUTPUT FORMAT:    {self.config['rx']['format']}")
+
+        if (len(self.config['rx']['ignored_channels']) == 0):
+            print("IGNORED CHANNELS: None\n")
+        else:
+            ignored_channels = ""
+            for i, c in enumerate(self.config['rx']['ignored_channels']):
+                if i > 0: ignored_channels += ", "
+                ignored_channels += c
+        
+            print(f"IGNORED CHANNELS: {ignored_channels}\n")
 
 
     def safe_stop(self, message=True):

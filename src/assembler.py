@@ -17,7 +17,7 @@ class Assembler:
     Coordinates assembly of files (bz2 / images / text) from packets.
     """
 
-    def __init__(self, dump, path, fmt):
+    def __init__(self, dump, path, fmt, ign_c):
         """
         Initialises assembler class
         """
@@ -29,6 +29,7 @@ class Assembler:
         self.path = path        # File output path
         self.format = fmt       # File output format
         self.files = {}         # File object list
+        self.ign_c = ign_c      # Ignored channel list
 
         # Setup core assembler thread
         assembler_thread = Thread()
@@ -132,6 +133,10 @@ class Assembler:
 
         # Check if file ID already exists
         if self.files.get(uid) == None:
+            # Check channel is not on the ignore list
+            if any(subs in self.get_string(packet[84:]) for subs in self.ign_c):
+                return
+
             # Create new file object
             self.files[uid] = File(
                 name   = self.get_string(packet[84:]),
