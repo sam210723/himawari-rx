@@ -21,7 +21,7 @@ class File:
         self.time_b    = time_b
         self.time_diff = time_b[0] - time_a[0]
 
-        self.payload = b''
+        self.payload = {}
         self.complete = False
         self.compressed = True
 
@@ -31,12 +31,14 @@ class File:
         Add data to file payload
         """
 
-        # Append data to payload
-        self.payload += data[16:]
-
-        # Check if last part has been received
+        # Get file part number
         part = self.get_int(data[8:10])
-        self.complete = part == (self.parts - 1)
+
+        # Append data to payload
+        self.payload[part] = data[16:]
+
+        # Check all parts have been received
+        self.complete = len(self.payload) == (self.parts - 1)
 
         return len(self.payload)
 
@@ -52,10 +54,21 @@ class File:
             bool: Save success flag
         """
 
+        if type(self.payload) == dict:
+            # Assemble contiguous payload from individual parts
+            file_payload = b''
+            for part in range(len(self.payload)):
+                try:
+                    file_payload += self.payload[part]
+                except KeyError:
+                    print(f"    MISSING PART {part}")
+            self.payload = file_payload
+
         # Check payload length is correct (file content without FEC)
         if len(self.payload) < self.length:
             return False
         
+        # Write payload to disk
         with open(self.get_save_path(path), 'wb') as f:
             f.write(self.payload[:self.length])
             f.close()
@@ -68,10 +81,21 @@ class File:
         Decompress bz2 file payload
         """
 
+        if type(self.payload) == dict:
+            # Assemble contiguous payload from individual parts
+            file_payload = b''
+            for part in range(len(self.payload)):
+                try:
+                    file_payload += self.payload[part]
+                except KeyError:
+                    print(f"    MISSING PART {part}")
+            self.payload = file_payload
+
         # Check payload length is correct (file content without FEC)
         if len(self.payload) < self.length:
             return False
         
+        # Decompress bz2 payload
         try:
             decomp = bz2.decompress(self.payload[:self.length])
         except Exception:

@@ -106,7 +106,7 @@ class HimawariRX:
                         run_time = round(time() - self.stime, 3)
                         print(f"\nFINISHED PROCESSING FILE ({run_time}s)")
 
-                        self.stop = True
+                        self.safe_stop()
                     else:
                         # Limit loop speed when waiting for assembler to finish processing
                         sleep(0.5)
