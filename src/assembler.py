@@ -114,7 +114,7 @@ class Assembler:
             
             # Check save operation was successful
             if ok:
-                print(Fore.GREEN + Style.BRIGHT + "    SAVED")
+                print(Fore.GREEN + Style.BRIGHT + f"    SAVED \"{self.files[uid].get_save_path(self.path)}\"")
             else:
                 print("    " + Fore.WHITE + Back.RED + Style.BRIGHT + "SAVE FAILED")
             
