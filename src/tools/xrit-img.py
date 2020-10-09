@@ -40,7 +40,7 @@ def init():
 
     # Input is directory
     if os.path.isdir(args.INPUT):
-        for f in glob.glob(f"{args.INPUT}\\IMG_*.*rit"):
+        for f in glob.glob(f"{args.INPUT}\\IMG_*"):
             files.append(f)
         files.sort()
     

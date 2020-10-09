@@ -13,7 +13,7 @@ class File:
 
     def __init__(self, name, path, parts, length, time_a, time_b):
         self.name      = name.split('.')[0]
-        self.ext       = name.split('.')[1]
+        self.ext       = f".{name.split('.')[1]}"
         self.path      = path
         self.parts     = parts
         self.length    = length
@@ -119,16 +119,15 @@ class File:
             time = name_split[2][8:]
 
             if self.compressed:
-                self.ext = "hrit.bz2"
+                self.ext = ".bz2"
             else:
-                self.ext = "hrit"
+                self.ext = ""
             
             pathlib.Path(f"{path}\\{date}\\{time}").mkdir(parents=True, exist_ok=True)
-            return f"{path}\\{date}\\{time}\\{self.name}.{self.ext}"
+            return f"{path}\\{date}\\{time}\\{self.name}{self.ext}"
 
-        elif self.ext == "tar":
-            self.ext = "txt.tar"
-            return f"{path}\\{self.name}.{self.ext}"
+        elif self.ext == ".tar":
+            return f"{path}\\{self.name}{self.ext}"
 
 
     def print_info(self):
