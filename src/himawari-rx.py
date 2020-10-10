@@ -201,7 +201,7 @@ class HimawariRX:
         }
 
         # Check output format is valid
-        if opts['rx']['format'] not in ['bz2', 'decompressed', 'png', 'jpg', 'bmp']:
+        if opts['rx']['format'] not in ['bz2', 'xrit', 'png', 'jpg', 'bmp']:
             print(Fore.WHITE + Back.RED + Style.BRIGHT + f"INVALID OUTPUT FORMAT \"{opts['rx']['format']}\"")
             self.safe_stop()
         

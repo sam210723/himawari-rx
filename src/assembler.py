@@ -106,7 +106,7 @@ class Assembler:
                     return
 
                 # Save file to disk after decompression
-                if self.config.format == "decompressed":
+                if self.config.format == "xrit":
                     ok = self.files[uid].save(self.config.path)
                 
                 # Generate image from decompressed payload
