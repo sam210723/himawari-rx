@@ -7,6 +7,7 @@ Frontend for HimawariCast file assembler and image generator
 
 import ast
 from argparse import ArgumentParser
+from collections import namedtuple
 import colorama
 from colorama import Fore, Back, Style
 from configparser import ConfigParser
@@ -41,11 +42,15 @@ class HimawariRX:
         else:
             self.dumpf = None
 
+        assembler_config = namedtuple('assembler_config', 'verbose dump path format ignored')
         self.assembler = Assembler(
-            self.dumpf,
-            self.config['rx']['path'],
-            self.config['rx']['format'],
-            self.config['rx']['ignored_channels']
+            assembler_config(
+                self.args.v,
+                self.dumpf,
+                self.config['rx']['path'],
+                self.config['rx']['format'],
+                self.config['rx']['ignored_channels']
+            )
         )
 
         # Check assembler thread is ready

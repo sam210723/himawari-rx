@@ -17,7 +17,7 @@ class Assembler:
     Coordinates assembly of files (bz2 / images / text) from packets.
     """
 
-    def __init__(self, dump, path, fmt, ign_c):
+    def __init__(self, config):
         """
         Initialises assembler class
         """
@@ -25,11 +25,8 @@ class Assembler:
         self.ready = False      # Assembler ready flag
         self.stop = False       # Core thread stop flag
         self.rxq = deque()      # Data receive queue
-        self.dump = dump        # Packet dump file
-        self.path = path        # File output path
-        self.format = fmt       # File output format
         self.files = {}         # File object list
-        self.ign_c = ign_c      # Ignored channel list
+        self.config = config    # Assembler configuration
 
         # Setup core assembler thread
         assembler_thread = Thread()
@@ -62,9 +59,9 @@ class Assembler:
                 print("\n" + Fore.WHITE + Back.RED + Style.BRIGHT + f"UNKNOWN PACKET TYPE: {packet[1]}")
 
             # Dump packet to file if enabled
-            if self.dump != None:
-                self.dump.write(packet)
-                self.dump.flush()
+            if self.config.dump != None:
+                self.config.dump.write(packet)
+                self.config.dump.flush()
 
             # Parse packet data based on packet type
             if   packet_type == "contents": self.parse_file_contents(packet)
@@ -94,7 +91,7 @@ class Assembler:
         if self.files[uid].complete:
 
             # Output format is uncompressed
-            if self.format != "bz2":
+            if self.config.format != "bz2":
                 # Decompress file payload
                 if not self.files[uid].decompress():
                     print("    " + Fore.WHITE + Back.RED + Style.BRIGHT + "DECOMPRESSION FAILED")
@@ -102,19 +99,19 @@ class Assembler:
                     return
 
                 # Save file to disk after decompression
-                if self.format == "decompressed":
-                    ok = self.files[uid].save(self.path)
+                if self.config.format == "decompressed":
+                    ok = self.files[uid].save(self.config.path)
                 
                 # Generate image from decompressed payload
-                elif any(fmt in self.format for fmt in ['png', 'jpg', 'bmp']):
+                elif any(fmt in self.config.format for fmt in ['png', 'jpg', 'bmp']):
                     pass
             else:
                 # Save compressed payload to disk
-                ok = self.files[uid].save(self.path)
+                ok = self.files[uid].save(self.config.path)
             
             # Check save operation was successful
             if ok:
-                print(Fore.GREEN + Style.BRIGHT + f"    SAVED \"{self.files[uid].get_save_path(self.path)}\"")
+                print(Fore.GREEN + Style.BRIGHT + f"    SAVED \"{self.files[uid].get_save_path(self.config.path)}\"")
             else:
                 print("    " + Fore.WHITE + Back.RED + Style.BRIGHT + "SAVE FAILED")
             
@@ -134,7 +131,7 @@ class Assembler:
         # Check if file ID already exists
         if self.files.get(uid) == None:
             # Check channel is not on the ignore list
-            if any(subs in self.get_string(packet[84:]) for subs in self.ign_c):
+            if any(subs in self.get_string(packet[84:]) for subs in self.config.ignored):
                 return
 
             # Create new file object
@@ -214,7 +211,5 @@ class Assembler:
 
 
 class PacketType(Enum):
-    unknown  = 0
     contents = 1
     info     = 3
-    unknown1 = 255
