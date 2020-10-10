@@ -130,7 +130,7 @@ def process_group(name, group):
         out_i.paste(img, (0, offset))
     
     out_i.save(f"{args.INPUT}\\{name}.png", format="PNG")
-    print()
+    print(f"  {Fore.GREEN}{Style.BRIGHT}SAVED \"{args.INPUT}\\{name}.png\"\n")
 
 def process_single(path, save=True):
     """
