@@ -56,7 +56,8 @@ class Assembler:
             try:
                 packet_type = PacketType(packet[1]).name
             except ValueError:
-                print("\n" + Fore.WHITE + Back.RED + Style.BRIGHT + f"UNKNOWN PACKET TYPE: {packet[1]}")
+                if self.config.verbose:
+                    print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[UNK]  TYPE: {packet[1]}   LEN: {len(packet)}")
 
             # Dump packet to file if enabled
             if self.config.dump != None:
@@ -87,6 +88,12 @@ class Assembler:
         # Append data to file payload
         self.files[uid].add(packet)
 
+        # Print file part packet info
+        if self.config.verbose:
+            print(f"[PART] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" ", end='')
+            print(f"#{str(self.get_int(packet[8:10]) + 1).zfill(4)} ", end='')
+            print(f"{str(len(self.files[uid].payload)).zfill(4)}/{str(self.files[uid].parts).zfill(4)}")
+
         # Check if last part has been received
         if self.files[uid].complete:
 
@@ -94,7 +101,7 @@ class Assembler:
             if self.config.format != "bz2":
                 # Decompress file payload
                 if not self.files[uid].decompress():
-                    print("    " + Fore.WHITE + Back.RED + Style.BRIGHT + "DECOMPRESSION FAILED")
+                    print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[BZ2]  \"{self.files[uid].name}\"")
                     del self.files[uid]
                     return
 
@@ -109,11 +116,11 @@ class Assembler:
                 # Save compressed payload to disk
                 ok = self.files[uid].save(self.config.path)
             
-            # Check save operation was successful
+            # Print save status message
             if ok:
-                print(Fore.GREEN + Style.BRIGHT + f"    SAVED \"{self.files[uid].get_save_path(self.config.path)}\"")
+                if self.config.verbose: print(Fore.GREEN + Style.BRIGHT + f"[SAVE] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" OK")
             else:
-                print("    " + Fore.WHITE + Back.RED + Style.BRIGHT + "SAVE FAILED")
+                if self.config.verbose: print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[SAVE] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" FAILED")
             
             # Remove file object from list
             del self.files[uid]
@@ -143,7 +150,10 @@ class Assembler:
                 time_a = self.get_time(packet[164:168]),
                 time_b = self.get_time(packet[60:64])
             )
-            self.files[uid].print_info()
+
+            if self.config.verbose:
+                print(f"\n[INFO] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" ", end='')
+                print(f"{round(self.files[uid].length/1024, 1)} kB IN {self.files[uid].parts} PARTS")
 
 
     def push(self, packet):
@@ -211,5 +221,6 @@ class Assembler:
 
 
 class PacketType(Enum):
-    contents = 1
-    info     = 3
+    contents = 1        # File contents (payload)
+    info     = 3        # File information
+    complete = 255      # File complete marker

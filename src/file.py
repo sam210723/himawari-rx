@@ -15,7 +15,7 @@ class File:
         self.name      = name.split('.')[0]
         self.ext       = f".{name.split('.')[1]}"
         self.path      = path
-        self.parts     = parts
+        self.parts     = parts - 1
         self.length    = length
         self.time_a    = time_a
         self.time_b    = time_b
@@ -38,7 +38,7 @@ class File:
         self.payload[part] = data[16:]
 
         # Check all parts have been received
-        self.complete = len(self.payload) == (self.parts - 1)
+        self.complete = len(self.payload) == self.parts
 
         return len(self.payload)
 
@@ -128,14 +128,6 @@ class File:
 
         elif self.ext == ".tar":
             return f"{path}\\{self.name}{self.ext}"
-
-
-    def print_info(self):
-        """
-        Print info about incoming file
-        """
-
-        print(f"\n[FILE] \"{self.name}\"")
 
 
     def get_int(self, data):
