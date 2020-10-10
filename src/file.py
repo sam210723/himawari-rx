@@ -15,7 +15,7 @@ class File:
         self.name      = name.split('.')[0]
         self.ext       = f".{name.split('.')[1]}"
         self.path      = path
-        self.parts     = parts - 1
+        self.parts     = parts
         self.length    = length
         self.time_a    = time_a
         self.time_b    = time_b

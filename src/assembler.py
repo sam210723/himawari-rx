@@ -67,6 +67,7 @@ class Assembler:
             # Parse packet data based on packet type
             if   packet_type == "contents": self.parse_file_contents(packet)
             elif packet_type == "info":     self.parse_file_info(packet)
+            elif packet_type == "complete": self.parse_file_complete(packet)
         
         # Gracefully exit core thread
         if self.stop:
@@ -93,6 +94,51 @@ class Assembler:
             print(f"[PART] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" ", end='')
             print(f"#{str(self.get_int(packet[8:10]) + 1).zfill(4)} ", end='')
             print(f"{str(len(self.files[uid].payload)).zfill(4)}/{str(self.files[uid].parts).zfill(4)}")
+
+
+    def parse_file_info(self, packet):
+        """
+        Parse file info packet
+        """
+
+        # Get packet UID and length
+        uid = self.get_int(packet[4:8])
+        #length = self.get_int(packet[2:4])     # Always 242 bytes
+
+        # Check if file ID already exists
+        if self.files.get(uid) == None:
+            # Check channel is not on the ignore list
+            if any(subs in self.get_string(packet[84:]) for subs in self.config.ignored):
+                return
+
+            # Create new file object
+            self.files[uid] = File(
+                name   = self.get_string(packet[84:]),
+                path   = self.get_string(packet[188:]),
+                parts  = self.get_int(packet[72:74]),
+                length = self.get_int(packet[172:176]),
+                time_a = self.get_time(packet[164:168]),
+                time_b = self.get_time(packet[60:64])
+            )
+
+            if self.config.verbose:
+                print(f"\n[INFO] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" ", end='')
+                print(f"{round(self.files[uid].length/1024, 1)} kB IN {self.files[uid].parts} PARTS")
+
+
+    def parse_file_complete(self, packet):
+        """
+        Parse file complete packet
+        """
+
+        # Get packet UID and length
+        uid = self.get_int(packet[4:8])
+        # length = self.get_int(packet[2:4])    # Always 1427 bytes
+        
+        # Ignore packet without associated file object
+        if self.files.get(uid) == None: return
+
+        if self.config.verbose: print(f"[DONE] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" COMPLETE")
 
         # Check if last part has been received
         if self.files[uid].complete:
@@ -124,36 +170,6 @@ class Assembler:
             
             # Remove file object from list
             del self.files[uid]
-
-
-    def parse_file_info(self, packet):
-        """
-        Parse file info packet
-        """
-
-        # Get packet UID and length
-        uid = self.get_int(packet[4:8])
-        #length = self.get_int(packet[2:4])     # Always 242 bytes
-
-        # Check if file ID already exists
-        if self.files.get(uid) == None:
-            # Check channel is not on the ignore list
-            if any(subs in self.get_string(packet[84:]) for subs in self.config.ignored):
-                return
-
-            # Create new file object
-            self.files[uid] = File(
-                name   = self.get_string(packet[84:]),
-                path   = self.get_string(packet[188:]),
-                parts  = self.get_int(packet[72:74]),
-                length = self.get_int(packet[172:176]),
-                time_a = self.get_time(packet[164:168]),
-                time_b = self.get_time(packet[60:64])
-            )
-
-            if self.config.verbose:
-                print(f"\n[INFO] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" ", end='')
-                print(f"{round(self.files[uid].length/1024, 1)} kB IN {self.files[uid].parts} PARTS")
 
 
     def push(self, packet):
