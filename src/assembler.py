@@ -84,16 +84,49 @@ class Assembler:
         # length = self.get_int(packet[2:4])    # Always 1427 bytes
         
         # Ignore parts without associated file object
-        if self.files.get(uid) == None: return
+        if self.files.get(uid) == None:
+            if self.config.verbose: print(Fore.WHITE + Back.RED + Style.BRIGHT + f"PART BEFORE INFO \"{self.to_hex(uid, 4)}\"")
+            return
         
         # Append data to file payload
         self.files[uid].add(packet)
 
         # Print file part packet info
-        if self.config.verbose:
-            print(f"[PART] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" ", end='')
-            print(f"#{str(self.get_int(packet[8:10]) + 1).zfill(4)} ", end='')
-            print(f"{str(len(self.files[uid].payload)).zfill(4)}/{str(self.files[uid].parts).zfill(4)}")
+        #if self.config.verbose:
+            #print(f"[PART] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" ", end='')
+            #print(f"#{str(self.get_int(packet[8:10]) + 1).zfill(4)} ", end='')
+            #print(f"{str(len(self.files[uid].payload)).zfill(4)}/{str(self.files[uid].parts).zfill(4)}")
+        
+        # Check if last part has been received
+        if self.files[uid].complete:
+
+            # Output format is uncompressed
+            if self.config.format != "bz2":
+                # Decompress file payload
+                if not self.files[uid].decompress():
+                    print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[BZ2]  \"{self.files[uid].name}\"")
+                    del self.files[uid]
+                    return
+
+                # Save file to disk after decompression
+                if self.config.format == "xrit":
+                    ok = self.files[uid].save(self.config.path)
+                
+                # Generate image from decompressed payload
+                elif any(fmt in self.config.format for fmt in ['png', 'jpg', 'bmp']):
+                    pass
+            else:
+                # Save compressed payload to disk
+                ok = self.files[uid].save(self.config.path)
+            
+            # Print save status message
+            if ok:
+                if self.config.verbose: print(Fore.GREEN + Style.BRIGHT + f"[SAVE] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" OK")
+            else:
+                if self.config.verbose: print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[SAVE] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" FAILED")
+            
+            # Remove file object from list
+            del self.files[uid]
 
 
     def parse_file_info(self, packet):
@@ -133,43 +166,15 @@ class Assembler:
 
         # Get packet UID and length
         uid = self.get_int(packet[4:8])
-        # length = self.get_int(packet[2:4])    # Always 1427 bytes
+        # length = self.get_int(packet[2:4])    # Always 8 bytes
         
         # Ignore packet without associated file object
         if self.files.get(uid) == None: return
 
-        if self.config.verbose: print(f"[DONE] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" COMPLETE")
-
-        # Check if last part has been received
-        if self.files[uid].complete:
-
-            # Output format is uncompressed
-            if self.config.format != "bz2":
-                # Decompress file payload
-                if not self.files[uid].decompress():
-                    print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[BZ2]  \"{self.files[uid].name}\"")
-                    del self.files[uid]
-                    return
-
-                # Save file to disk after decompression
-                if self.config.format == "xrit":
-                    ok = self.files[uid].save(self.config.path)
-                
-                # Generate image from decompressed payload
-                elif any(fmt in self.config.format for fmt in ['png', 'jpg', 'bmp']):
-                    pass
-            else:
-                # Save compressed payload to disk
-                ok = self.files[uid].save(self.config.path)
-            
-            # Print save status message
-            if ok:
-                if self.config.verbose: print(Fore.GREEN + Style.BRIGHT + f"[SAVE] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" OK")
-            else:
-                if self.config.verbose: print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[SAVE] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" FAILED")
-            
-            # Remove file object from list
-            del self.files[uid]
+        if self.config.verbose:
+            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[DONE] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" COMPLETE ", end='')
+            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"{str(len(self.files[uid].payload)).zfill(4)}/{str(self.files[uid].parts).zfill(4)}")
+            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"MISSING {self.files[uid].parts - len(self.files[uid].payload)} PARTS")
 
 
     def push(self, packet):
