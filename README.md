@@ -4,12 +4,11 @@
 [![Github all releases](https://img.shields.io/github/downloads/sam210723/himawari-rx/total.svg)](https://github.com/sam210723/himawari-rx/releases/latest)
 [![GitHub license](https://img.shields.io/github/license/sam210723/himawari-rx.svg)](https://github.com/sam210723/himawari-rx/blob/master/LICENSE)
 
-**himawari-rx** is a file assembler built for receiving images from geostationary weather satellite [Himawari-8 (140.7˚E)](https://himawari8.nict.go.jp/) via the [HimawariCast](https://www.data.jma.go.jp/mscweb/en/himawari89/himawari_cast/himawari_cast.php) data service operated by [JMA](https://www.data.jma.go.jp/mscweb/en/index.html).
+**himawari-rx** is a file assembler built for receiving images from geostationary weather satellite [Himawari-8 (140.7˚E)](https://himawari8.nict.go.jp/) via the [HimawariCast](https://www.data.jma.go.jp/mscweb/en/himawari89/himawari_cast/himawari_cast.php) data service operated by [JMA](https://www.data.jma.go.jp/mscweb/en/index.html). HimawariCast is a DVB-S2 based signal transmitted from [JCSAT-2B (154°E)](https://www.jsat.net/en/contour/jcsat-2b.html) on its [global C-band beam](https://www.satbeams.com/footprints?beam=8542). It can be received with a 2.4m satellite dish and a standard C-band LNB. It may be possible to use a smaller dish however this has not been verified.
 
-HimawariCast is a DVB-S2 based signal transmitted from [JCSAT-2B (154°E)](https://www.jsat.net/en/contour/jcsat-2b.html) on its [global C-band beam](https://www.satbeams.com/footprints?beam=8542). It can be received with a 2.4m satellite dish and a standard C-band LNB. It may be possible to use a smaller dish however this has not been verified.
+**himawari-rx** receives UDP datagrams over a network connection and outputs decoded image files to disk. The UDP datagrams can come from either a DVB-S2 receiver card such as a [TBS5520SE](https://www.tbsdtv.com/products/tbs5520se_multi-standard_tv_tuner_usb_box.html) or a satellite IP receiver such as the [Novra S300D](https://novra.com/product/s300d-receiver). A Software Defined Radio solution using GNU Radio is currently under development.
 
-**himawari-rx** receives UDP datagrams over the network from either a DVB-S2 receiver card such as a [TBS5520SE](https://www.tbsdtv.com/products/tbs5520se_multi-standard_tv_tuner_usb_box.html) or a satellite IP receiver such as the [Novra S300D](https://novra.com/product/s300d-receiver). A Software Defined Radio solution using GNU Radio is currently under development.
-
+![](https://vksdr.com/bl-content/uploads/pages/211ee4ec1b2432204d0a98f46b47a131/wavelengths.png)
 
 ## List of options
 #### `rx` section
