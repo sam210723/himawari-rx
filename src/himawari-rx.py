@@ -26,6 +26,7 @@ class HimawariRX:
         print("├──────────────────────────────────────────────┤")
         print("│    @sam210723       vksdr.com/himawari-rx    │")
         print("└──────────────────────────────────────────────┘\n")
+        self.version = "0.1-dev"
 
         # Initialise Colorama
         colorama.init(autoreset=True)
@@ -233,14 +234,16 @@ class HimawariRX:
         print(f"OUTPUT FORMAT:    {self.config['rx']['format']}")
 
         if (len(self.config['rx']['ignored_channels']) == 0):
-            print("IGNORED CHANNELS: None\n")
+            print("IGNORED CHANNELS: None")
         else:
             ignored_channels = ""
             for i, c in enumerate(self.config['rx']['ignored_channels']):
                 if i > 0: ignored_channels += ", "
                 ignored_channels += c
         
-            print(f"IGNORED CHANNELS: {ignored_channels}\n")
+            print(f"IGNORED CHANNELS: {ignored_channels}")
+        
+        print(f"VERSION:          {self.version}\n")
 
 
     def safe_stop(self, message=True):
