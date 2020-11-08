@@ -19,7 +19,7 @@ A (work in progress) guide for setting up the hardware and software components o
 ## Imaging Bands
 Himawari-8 is capable of capturing Earth in 16 different wavelengths of light, 14 of which are transmitted via the HimawariCast service.
 
-![HimawariCast Bands](https://vksdr.com/bl-content/uploads/pages/211ee4ec1b2432204d0a98f46b47a131/bands_w.png)
+<p align="center"><img src="https://vksdr.com/bl-content/uploads/pages/211ee4ec1b2432204d0a98f46b47a131/bands_w.png" title="HimawariCast Bands"></p>
 
 <!--
 | Band | Detail  | Identifier  | Size  | Resolution    |
