@@ -14,6 +14,31 @@
 ## Getting Started
 A (work in progress) guide for setting up the hardware and software components of a HimawariCast receiver is [available on my site](https://vksdr.com/himawari-rx).
 
+<a href="https://vksdr.com/himawari-rx" target="_blank"><p align="center"><img src="https://vksdr.com/bl-content/uploads/pages/211ee4ec1b2432204d0a98f46b47a131/guide-thumb-white.png" title="Receiving Images from Geostationary Weather Satellite Himawari-8 via HimawariCast"></p></a>
+
+## Imaging Bands
+Himawari-8 is capable of capturing Earth in 16 different wavelengths of light, 14 of which are transmitted via the HimawariCast service.
+
+![HimawariCast Bands](https://vksdr.com/bl-content/uploads/pages/211ee4ec1b2432204d0a98f46b47a131/bands_w.png)
+
+<!--
+| Band | Detail  | Identifier  | Size  | Resolution    |
+| ---- | ------- | ----------- | ----- | ------------- |
+| 3    | 1 km/px | ``VIS``     | 75 MB | 11000 x 11000 |
+| 4    | 4 km/px | ``B04``     | 6 MB  | 2750 x 2750   |
+| 5    | 4 km/px | ``B05``     | 6 MB  | 2750 x 2750   |
+| 6    | 4 km/px | ``B06``     | 6 MB  | 2750 x 2750   |
+| 7    | 4 km/px | ``IR4``     | 6 MB  | 2750 x 2750   |
+| 8    | 4 km/px | ``IR3``     | 4 MB  | 2750 x 2750   |
+| 9    | 4 km/px | ``B09``     | 4 MB  | 2750 x 2750   |
+| 10   | 4 km/px | ``B10``     | 4 MB  | 2750 x 2750   |
+| 11   | 4 km/px | ``B11``     | 6 MB  | 2750 x 2750   |
+| 12   | 4 km/px | ``B12``     | 5 MB  | 2750 x 2750   |
+| 13   | 4 km/px | ``IR1``     | 6 MB  | 2750 x 2750   |
+| 14   | 4 km/px | ``B14``     | 6 MB  | 2750 x 2750   |
+| 15   | 4 km/px | ``IR2``     | 6 MB  | 2750 x 2750   |
+| 16   | 4 km/px | ``B16``     | 5 MB  | 2750 x 2750   |
+-->
 
 ## List of options
 #### `rx` section
