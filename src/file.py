@@ -11,7 +11,18 @@ class File:
     Incoming file object containing file properties and payload
     """
 
-    def __init__(self, name, path, parts, length, time_a, time_b):
+    def __init__(self):
+        self.payload = {}
+        self.ignored = False
+        self.complete = False
+        self.compressed = True
+
+
+    def info(self, name, path, parts, length, time_a, time_b):
+        """
+        Set properties for incoming file
+        """
+
         self.name      = name.split('.')[0]
         self.ext       = f".{name.split('.')[1]}"
         self.path      = path
@@ -20,10 +31,6 @@ class File:
         self.time_a    = time_a
         self.time_b    = time_b
         self.time_diff = time_b[0] - time_a[0]
-
-        self.payload = {}
-        self.complete = False
-        self.compressed = True
 
 
     def add(self, data):
@@ -38,7 +45,11 @@ class File:
         self.payload[part] = data[16:]
 
         # Check all parts have been received
-        self.complete = len(self.payload) == self.parts
+        try:
+            self.complete = len(self.payload) == self.parts
+        except AttributeError:
+            # Handle complete check before file info has been set
+            self.complete = False
 
         return len(self.payload)
 

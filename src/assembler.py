@@ -3,7 +3,7 @@ assembler.py
 https://github.com/sam210723/himawari-rx
 """
 
-from collections import deque
+from collections import deque, namedtuple
 from colorama import Fore, Back, Style
 from datetime import datetime
 from enum import Enum
@@ -52,129 +52,168 @@ class Assembler:
                 sleep(10 / 1000)
                 continue
             
-            # Get packet type
-            try:
-                packet_type = PacketType(packet[1]).name
-            except ValueError:
-                if self.config.verbose:
-                    print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[UNK]  TYPE: {packet[1]}   LEN: {len(packet)}")
-
             # Dump packet to file if enabled
             if self.config.dump != None:
                 self.config.dump.write(packet)
                 self.config.dump.flush()
+            
+            # Parse packet header
+            packet = self.parse_packet_header(packet)
 
             # Parse packet data based on packet type
-            if   packet_type == "contents": self.parse_file_contents(packet)
-            elif packet_type == "info":     self.parse_file_info(packet)
-            elif packet_type == "complete": self.parse_file_complete(packet)
+            if   packet.type == 1:   self.parse_file_contents(packet)   # File contents (payload)
+            elif packet.type == 3:   self.parse_file_info(packet)       # File information
+            elif packet.type == 255: self.parse_file_complete(packet)   # File complete marker
+
         
         # Gracefully exit core thread
-        if self.stop:
-            return
+        if self.stop: return
 
 
-    def parse_file_contents(self, packet):
+    def parse_packet_header(self, packet):
         """
-        Parse file contents packet
+        Get packet info from header
         """
 
-        # Get packet UID and length
-        uid = self.get_int(packet[4:8])
-        # length = self.get_int(packet[2:4])    # Always 1427 bytes
+        packet_tuple = namedtuple('packet_info', 'data type length uid')
+
+        return packet_tuple(
+            data   = packet,
+            type   = packet[1],
+            length = self.get_int(packet[2:4]),
+            uid    = self.get_int(packet[4:8])
+        )
+
+
+    def parse_file_info(self, p):
+        """
+        Parse file info packet (type 3)
+        """
+
+        # Create file object if new UID
+        if not self.file_exists(p):
+            self.files[p.uid] = File()
         
-        # Ignore parts without associated file object
-        if self.files.get(uid) == None:
-            if self.config.verbose: print(Fore.WHITE + Back.RED + Style.BRIGHT + f"PART BEFORE INFO \"{self.to_hex(uid, 4)}\"")
-            return
+        # Check for existing file info
+        try:
+            self.files[p.uid].name
+        except AttributeError:
+            # Set file info properties
+            self.files[p.uid].info(
+                name   = self.get_string(p.data[84:]),
+                path   = self.get_string(p.data[188:]),
+                parts  = self.get_int(p.data[72:74]),
+                length = self.get_int(p.data[172:176]),
+                time_a = self.get_time(p.data[164:168]),
+                time_b = self.get_time(p.data[60:64])
+            )
+
+            # Set ignored file flag
+            self.files[p.uid].ignored = self.is_ignored(self.files[p.uid])
+
+            # Print file info
+            if self.config.verbose:
+                print(f"\n[INFO] {self.to_hex(p.uid, 4)} \"{self.files[p.uid].name}\" ", end='')
+                print(f"{round(self.files[p.uid].length/1024, 1)} kB IN {self.files[p.uid].parts} PARTS")
+
+
+    def parse_file_contents(self, p):
+        """
+        Parse file contents packet (type 1)
+        """
+        
+        # Create file object if new UID
+        if not self.file_exists(p):
+            if self.config.verbose: print(Fore.WHITE + Back.RED + Style.BRIGHT + f"PART BEFORE INFO \"{self.to_hex(p.uid, 4)}\"")
+            self.files[p.uid] = File()
         
         # Append data to file payload
-        self.files[uid].add(packet)
+        self.files[p.uid].add(p.data)
 
         # Print file part packet info
-        #if self.config.verbose:
-            #print(f"[PART] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" ", end='')
-            #print(f"#{str(self.get_int(packet[8:10]) + 1).zfill(4)} ", end='')
-            #print(f"{str(len(self.files[uid].payload)).zfill(4)}/{str(self.files[uid].parts).zfill(4)}")
+        """
+        if self.config.verbose:
+            try:
+                print(f"[PART] {self.to_hex(p.uid, 4)} \"{self.files[p.uid].name}\" ", end='')
+                print(f"#{str(self.get_int(p.data[8:10]) + 1).zfill(4)} ", end='')
+                print(f"{str(len(self.files[p.uid].payload)).zfill(4)}/{str(self.files[p.uid].parts).zfill(4)}")
+            except AttributeError:
+                print(f"[PART] {self.to_hex(p.uid, 4)} ", end='')
+                print(f"#{str(self.get_int(p.data[8:10]) + 1).zfill(4)}")
+        """
         
         # Check if last part has been received
-        if self.files[uid].complete:
+        if self.files[p.uid].complete:
 
             # Output format is uncompressed
             if self.config.format != "bz2":
                 # Decompress file payload
-                if not self.files[uid].decompress():
-                    print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[BZ2]  \"{self.files[uid].name}\"")
-                    del self.files[uid]
+                if not self.files[p.uid].decompress():
+                    print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[BZ2]  \"{self.files[p.uid].name}\"")
+                    del self.files[p.uid]
                     return
 
                 # Save file to disk after decompression
                 if self.config.format == "xrit":
-                    ok = self.files[uid].save(self.config.path)
+                    ok = self.files[p.uid].save(self.config.path)
                 
                 # Generate image from decompressed payload
                 elif any(fmt in self.config.format for fmt in ['png', 'jpg', 'bmp']):
                     pass
             else:
                 # Save compressed payload to disk
-                ok = self.files[uid].save(self.config.path)
+                ok = self.files[p.uid].save(self.config.path)
             
             # Print save status message
             if ok:
-                if self.config.verbose: print(Fore.GREEN + Style.BRIGHT + f"[SAVE] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" OK")
+                if self.config.verbose: print(Fore.GREEN + Style.BRIGHT + f"[SAVE] {self.to_hex(p.uid, 4)} \"{self.files[p.uid].name}\" OK")
             else:
-                if self.config.verbose: print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[SAVE] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" FAILED")
+                if self.config.verbose: print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[SAVE] {self.to_hex(p.uid, 4)} \"{self.files[p.uid].name}\" FAILED")
             
+            # Copy file name to history when complete
+            self.file_history.insert(0, self.files[p.uid].name)
+
             # Remove file object from list
-            del self.files[uid]
+            del self.files[p.uid]
 
 
-    def parse_file_info(self, packet):
+    def parse_file_complete(self, p):
         """
-        Parse file info packet
+        Parse file complete packet (type 255)
         """
-
-        # Get packet UID and length
-        uid = self.get_int(packet[4:8])
-        #length = self.get_int(packet[2:4])     # Always 242 bytes
-
-        # Check if file ID already exists
-        if self.files.get(uid) == None:
-            # Check channel is not on the ignore list
-            if any(subs in self.get_string(packet[84:]) for subs in self.config.ignored):
-                return
-
-            # Create new file object
-            self.files[uid] = File(
-                name   = self.get_string(packet[84:]),
-                path   = self.get_string(packet[188:]),
-                parts  = self.get_int(packet[72:74]),
-                length = self.get_int(packet[172:176]),
-                time_a = self.get_time(packet[164:168]),
-                time_b = self.get_time(packet[60:64])
-            )
-
-            if self.config.verbose:
-                print(f"\n[INFO] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" ", end='')
-                print(f"{round(self.files[uid].length/1024, 1)} kB IN {self.files[uid].parts} PARTS")
-
-
-    def parse_file_complete(self, packet):
-        """
-        Parse file complete packet
-        """
-
-        # Get packet UID and length
-        uid = self.get_int(packet[4:8])
-        # length = self.get_int(packet[2:4])    # Always 8 bytes
         
         # Ignore packet without associated file object
-        if self.files.get(uid) == None: return
+        if not self.file_exists(p): return
+
+        # Check file info has been set
+        try:
+            self.files[p.uid].name
+        except AttributeError:
+            # Removed complete file with missing info
+            del self.files[p.uid]
+            return
 
         if self.config.verbose:
-            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[DONE] {self.to_hex(uid, 4)} \"{self.files[uid].name}\" COMPLETE ", end='')
-            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"{str(len(self.files[uid].payload)).zfill(4)}/{str(self.files[uid].parts).zfill(4)}")
-            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"MISSING {self.files[uid].parts - len(self.files[uid].payload)} PARTS")
+            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[DONE] {self.to_hex(p.uid, 4)} \"{self.files[p.uid].name}\" COMPLETE ", end='')
+            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"{str(len(self.files[p.uid].payload)).zfill(4)}/{str(self.files[p.uid].parts).zfill(4)}")
+            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"MISSING {self.files[p.uid].parts - len(self.files[p.uid].payload)} PARTS")
+
+
+    def is_ignored(self, f):
+        """
+        Check if file channel is ignored
+        """
+
+        return any(subs in f.name for subs in self.config.ignored)
+
+
+    def file_exists(self, p):
+        """
+        Check if file object exists
+        """
+
+        return self.files.get(p.uid) != None
+
 
 
     def push(self, packet):
@@ -239,9 +278,3 @@ class Assembler:
         """
 
         return int.from_bytes(data, 'little')
-
-
-class PacketType(Enum):
-    contents = 1        # File contents (payload)
-    info     = 3        # File information
-    complete = 255      # File complete marker
