@@ -21,7 +21,7 @@ A (work in progress) guide for setting up the hardware and software components o
 | ------- | ----------- | ------- | ------- |
 | `path` | Root output path for received files | *Absolute or relative file path* | `"received"` |
 | `format` | File type to output | `bz2`: Compressed xRIT files<br>`xrit`: LRIT/HRIT files | `xrit` |
-| `ignored_channels` | List of channels (bands) to ignore<br>(e.g. `"B09", "IR2"`) | <a href="https://pbs.twimg.com/media/EjCwnFrUcAAl_Bl?format=png&name=small" target="_blank">Table of available bands</a> | *none* |
+| `ignored_channels` | List of channels (bands) to ignore<br>(e.g. `"B09", "IR2"`) | <a href="https://vksdr.com/bl-content/uploads/pages/211ee4ec1b2432204d0a98f46b47a131/bands_w.png" target="_blank">Table of available bands</a> | *none* |
 
 #### `udp` section
 These two options generally do not need to be changed.
