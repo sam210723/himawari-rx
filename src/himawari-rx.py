@@ -20,13 +20,17 @@ from assembler import Assembler
 
 class HimawariRX:
     def __init__(self):
-        print("┌──────────────────────────────────────────────┐")
-        print("│                 himawari-rx                  │")
-        print("│       HimawariCast Downlink Processor        │")
-        print("├──────────────────────────────────────────────┤")
-        print("│    @sam210723       vksdr.com/himawari-rx    │")
-        print("└──────────────────────────────────────────────┘\n")
         self.version = "0.1-dev"
+
+        try:
+            print("┌──────────────────────────────────────────────┐")
+            print("│                 himawari-rx                  │")
+            print("│       HimawariCast Downlink Processor        │")
+            print("├──────────────────────────────────────────────┤")
+            print("│    @sam210723       vksdr.com/himawari-rx    │")
+            print("└──────────────────────────────────────────────┘\n")
+        except UnicodeEncodeError:
+            print(f"himawari-rx v{self.version}\n")
 
         # Initialise Colorama
         colorama.init(autoreset=True)
@@ -59,7 +63,10 @@ class HimawariRX:
             print(Fore.WHITE + Back.RED + Style.BRIGHT + "ASSEMBLER CORE THREAD FAILED TO START")
             self.safe_stop()
 
-        print("──────────────────────────────────────────────────────────────────────────────────")
+        try:
+            print("──────────────────────────────────────────────────────────────────────────────────")
+        except UnicodeEncodeError:
+            pass
 
         # Reset stop flag
         self.stop = False
@@ -202,7 +209,7 @@ class HimawariRX:
         }
 
         # Check output format is valid
-        if opts['rx']['format'] not in ['bz2', 'xrit', 'png', 'jpg', 'bmp']:
+        if opts['rx']['format'] not in ['bz2', 'xrit', 'png', 'jpg', 'bmp']:    #TODO: Handle image formats
             print(Fore.WHITE + Back.RED + Style.BRIGHT + f"INVALID OUTPUT FORMAT \"{opts['rx']['format']}\"")
             self.safe_stop()
         
