@@ -29,9 +29,8 @@ class Assembler:
         self.config = config    # Assembler configuration
 
         # Setup core assembler thread
-        assembler_thread = Thread()
+        assembler_thread = Thread(target=self.assembler_core)
         assembler_thread.name = "ASSEMBLER CORE"
-        assembler_thread.run = self.assembler_core
         assembler_thread.start()
 
 
