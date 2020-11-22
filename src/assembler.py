@@ -64,8 +64,10 @@ class Assembler:
             if   packet.type == 1:   self.parse_file_contents(packet)   # File contents (payload)
             elif packet.type == 3:   self.parse_file_info(packet)       # File information
             elif packet.type == 255: self.parse_file_complete(packet)   # File complete marker
+            else:
+                if self.config.verbose: print(Fore.WHITE + Back.RED + Style.BRIGHT + f"UNKNOWN PACKET TYPE \"{packet.type}\"")
 
-        
+
         # Gracefully exit core thread
         if self.stop: return
 
@@ -169,9 +171,6 @@ class Assembler:
                 if self.config.verbose: print(Fore.GREEN + Style.BRIGHT + f"[SAVE] {self.to_hex(p.uid, 4)} \"{self.files[p.uid].name}\" OK")
             else:
                 if self.config.verbose: print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[SAVE] {self.to_hex(p.uid, 4)} \"{self.files[p.uid].name}\" FAILED")
-            
-            # Copy file name to history when complete
-            self.file_history.insert(0, self.files[p.uid].name)
 
             # Remove file object from list
             del self.files[p.uid]
