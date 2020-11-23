@@ -8,7 +8,7 @@ from colorama import Fore, Back, Style
 from datetime import datetime
 from enum import Enum
 from threading import Thread
-from time import sleep
+from time import time, sleep
 
 from file import File
 
@@ -98,6 +98,7 @@ class Assembler:
         # Check for existing file info
         try:
             self.files[p.uid].name
+            #if self.config.verbose: print(f"[INFO] {self.to_hex(p.uid, 4)}")
         except AttributeError:
             # Set file info properties
             self.files[p.uid].info(
@@ -145,14 +146,19 @@ class Assembler:
         
         # Check if last part has been received
         if self.files[p.uid].complete:
-
             # Output format is uncompressed
             if self.config.format != "bz2":
+                # Get decompression start time
+                decomp_time = time()
+
                 # Decompress file payload
                 if not self.files[p.uid].decompress():
+                    # Decompression failed
                     print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[BZ2]  \"{self.files[p.uid].name}\"")
                     del self.files[p.uid]
                     return
+                else:
+                    if self.config.verbose: print(Fore.GREEN + Style.BRIGHT + f"[BZ2 ] {self.to_hex(p.uid, 4)} \"{self.files[p.uid].name}\" OK ({round(time() - decomp_time, 3)}s)")
 
                 # Save file to disk after decompression
                 if self.config.format == "xrit":
