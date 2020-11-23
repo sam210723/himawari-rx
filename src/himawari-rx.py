@@ -60,7 +60,7 @@ class HimawariRX:
 
         # Check assembler thread is ready
         if not self.assembler.ready:
-            print(Fore.WHITE + Back.RED + Style.BRIGHT + "ASSEMBLER CORE THREAD FAILED TO START")
+            print(Fore.WHITE + Back.RED + Style.BRIGHT + "ASSEMBLER THREAD FAILED TO START")
             self.safe_stop()
 
         try:

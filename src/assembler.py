@@ -28,9 +28,9 @@ class Assembler:
         self.files = {}         # File object list
         self.config = config    # Assembler configuration
 
-        # Setup core assembler thread
+        # Setup assembler thread
         assembler_thread = Thread(target=self.assembler_core)
-        assembler_thread.name = "ASSEMBLER CORE"
+        assembler_thread.name = "ASSEMBLER"
         assembler_thread.start()
 
 
