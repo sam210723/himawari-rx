@@ -219,7 +219,7 @@ class HimawariRX:
             ignored_channels = ast.literal_eval(opts['rx']['ignored_channels'])
 
             # If parsed into int, wrap int in list
-            if type(ignored_channels) == int: ignored_channels = [ignored_channels]
+            if type(ignored_channels) == str: ignored_channels = [ignored_channels]
             opts['rx']['ignored_channels'] = ignored_channels
 
         return opts
