@@ -37,19 +37,29 @@ class File:
         # Allocate byte array for file payload
         self.buffer = bytearray(length)
 
+        # Process parts received before info
+        if len(self.temp_parts) > 0:
+            for part in self.temp_parts:
+                self.add(part)
+            self.temp_parts = []
+
 
     def add(self, data):
         """
         Add data to file payload
         """
 
-        #TODO: Handle part arriving before info (put in temp dict until info ready)
-
         # Get file part number and byte offset
         part = self.get_int(data[8:10])
-        offset = part * 1411
+
+        try:
+            self.name
+        except AttributeError:
+            self.temp_parts.append(data)
+            return len(self.temp_parts)
 
         # Add data to file payload
+        offset = part * 1411
         self.buffer[offset : offset + 1411] = data[16:]
         self.part_counter += 1
 
