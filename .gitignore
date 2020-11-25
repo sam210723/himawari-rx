@@ -129,5 +129,6 @@ dmypy.json
 .pyre/
 
 src/received/
-*.bin
 release/
+*.bin
+*.zip
