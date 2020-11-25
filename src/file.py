@@ -12,11 +12,12 @@ class File:
     """
 
     def __init__(self):
-        self.buffer = None
-        self.part_counter = 0
-        self.ignored = False
-        self.complete = False
-        self.compressed = True
+        self.buffer = None          # Byte array for file payload
+        self.part_counter = 0       # Number of parts received
+        self.temp_parts = []        # List of parts which arrived before info
+        self.ignored = False        # File is associated with ignored channel
+        self.complete = False       # All file parts have been received
+        self.compressed = True      # File compression state flag
 
 
     def info(self, name, path, parts, length, time_a, time_b):
