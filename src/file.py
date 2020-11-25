@@ -65,25 +65,32 @@ class File:
             bool: Save success flag
         """
 
-        if type(self.payload) == dict:
-            # Assemble contiguous payload from individual parts
-            file_payload = b''
-            for part in range(len(self.payload)):
-                try:
-                    file_payload += self.payload[part]
-                except KeyError:
-                    print(f"    MISSING PART {part}")
-            self.payload = file_payload
+        # Total bytes written to disk
+        written = 0
 
-        # Check payload length is correct (file content without FEC)
-        if len(self.payload) < self.length:
-            return False
-        
-        # Write payload to disk
-        with open(self.get_save_path(path), 'wb') as f:
-            f.write(self.payload[:self.length])
-            f.close()
+        f = open(self.get_save_path(path), 'wb')
 
+        # Loop through each part in order
+        for part in range(len(self.payload)):
+            # Check part is not missing
+            try:
+                part = self.payload[part]
+            except KeyError:
+                print(f"    MISSING PART {part}")
+
+            # Update write counter
+            written += len(part)
+
+            if written > self.length:
+                # Write remaining payload bytes to disk (skipping appended FEC data)
+                remaining = self.length - written
+                f.write(part[:remaining])
+                continue
+            else:
+                # Write complete part to disk
+                f.write(part)
+
+        f.close()
         return True
 
 

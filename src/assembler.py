@@ -58,6 +58,7 @@ class Assembler:
             
             # Parse packet header
             packet = self.parse_packet_header(packet)
+            #print(".", end="", flush=True)
 
             # Parse packet data based on packet type
             if   packet.type == 1:   self.parse_file_contents(packet)   # File contents (payload)
@@ -133,8 +134,7 @@ class Assembler:
         self.files[p.uid].add(p.data)
 
         # Print file part packet info
-        """
-        if self.config.verbose:
+        if self.config.verbose and False:
             try:
                 print(f"[PART] {self.to_hex(p.uid, 4)} \"{self.files[p.uid].name}\" ", end='')
                 print(f"#{str(self.get_int(p.data[8:10]) + 1).zfill(4)} ", end='')
@@ -142,7 +142,6 @@ class Assembler:
             except AttributeError:
                 print(f"[PART] {self.to_hex(p.uid, 4)} ", end='')
                 print(f"#{str(self.get_int(p.data[8:10]) + 1).zfill(4)}")
-        """
         
         # Check if last part has been received
         if self.files[p.uid].complete:
@@ -176,7 +175,7 @@ class Assembler:
             else:
                 # Save compressed payload to disk
                 ok = self.files[p.uid].save(self.config.path)
-            
+
             # Print save status message
             if ok:
                 if self.config.verbose: print(Fore.GREEN + Style.BRIGHT + f"[SAVE] {self.to_hex(p.uid, 4)} \"{self.files[p.uid].name}\" OK")
