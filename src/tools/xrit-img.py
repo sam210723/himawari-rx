@@ -149,12 +149,13 @@ def process_single(path, save=True):
     print(f"  {h}x{v} @ {bpp} bpp")
 
     # Create numpy array from data field
-    z = np.frombuffer(data, dtype=f">u{int(bpp / 8)}", count=h*v)
-    
+    z = np.frombuffer(data, dtype=f">u{int(bpp / 8)}", count=h*v).reshape(v, h)
+
     #TODO: Save native 16-bit images
-    # TEMP: 16-bit to 8-bit depth
+    #TEMP: 16-bit to 8-bit depth conversion
     if bpp == 16: z = z / 4
     
+    #i = Image.frombuffer("I;16", [h, v], z.astype('uint16'), 'raw', 'I;16', 0, 1)
     i = Image.frombuffer("L", [h, v], z.astype('uint8'), 'raw', 'L', 0, 1)
     
     # Save image or return object
