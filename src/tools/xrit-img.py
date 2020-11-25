@@ -159,7 +159,7 @@ def process_single(path, save=True):
     
     # Save image or return object
     if save:
-        i.save(f"{args.INPUT}\\{name.full}.png")
+        i.save(f"{args.INPUT}.png")
     else:
         return i
 
