@@ -182,7 +182,7 @@ class HimawariRX:
         argp.description = "Receive weather images from geostationary satellite Himawari-8 (140.7˚E) via the HimawariCast service."
         argp.add_argument("--config", action="store", help="Configuration file path (.ini)", default="himawari-rx.ini")
         argp.add_argument("--file", action="store", help="Path to packet file", default=None)
-        argp.add_argument("-v", action="store_true", help="Enable verbose console output (only useful for debugging)", default=False)
+        argp.add_argument("-v", action="store_true", help="Enable verbose console output (only useful for debugging)", default=True)
         argp.add_argument("--dump", action="store", help="Path to packet output file")
         
         return argp.parse_args()
