@@ -12,7 +12,8 @@ class File:
     """
 
     def __init__(self):
-        self.payload = {}
+        self.buffer = None
+        self.part_counter = 0
         self.ignored = False
         self.complete = False
         self.compressed = True
@@ -32,26 +33,33 @@ class File:
         self.time_b    = time_b
         self.time_diff = time_b[0] - time_a[0]
 
+        # Allocate byte array for file payload
+        self.buffer = bytearray(length)
+
 
     def add(self, data):
         """
         Add data to file payload
         """
 
-        # Get file part number
-        part = self.get_int(data[8:10])
+        #TODO: Handle part arriving before info (put in temp dict until info ready)
 
-        # Append data to payload
-        self.payload[part] = data[16:]
+        # Get file part number and byte offset
+        part = self.get_int(data[8:10])
+        offset = part * 1411
+
+        # Add data to file payload
+        self.buffer[offset : offset + 1411] = data[16:]
+        self.part_counter += 1
 
         # Check all parts have been received
         try:
-            self.complete = len(self.payload) == self.parts
+            self.complete = self.part_counter == self.parts
         except AttributeError:
             # Handle complete check before file info has been set
             self.complete = False
 
-        return len(self.payload)
+        return self.part_counter
 
 
     def save(self, path):
@@ -65,32 +73,10 @@ class File:
             bool: Save success flag
         """
 
-        # Total bytes written to disk
-        written = 0
-
         f = open(self.get_save_path(path), 'wb')
-
-        # Loop through each part in order
-        for part in range(len(self.payload)):
-            # Check part is not missing
-            try:
-                part = self.payload[part]
-            except KeyError:
-                print(f"    MISSING PART {part}")
-
-            # Update write counter
-            written += len(part)
-
-            if written > self.length:
-                # Write remaining payload bytes to disk (skipping appended FEC data)
-                remaining = self.length - written
-                f.write(part[:remaining])
-                continue
-            else:
-                # Write complete part to disk
-                f.write(part)
-
+        f.write(self.buffer[:self.length])
         f.close()
+
         return True
 
 
@@ -99,28 +85,14 @@ class File:
         Decompress bz2 file payload
         """
 
-        if type(self.payload) == dict:
-            # Assemble contiguous payload from individual parts
-            file_payload = b''
-            for part in range(len(self.payload)):
-                try:
-                    file_payload += self.payload[part]
-                except KeyError:
-                    print(f"    MISSING PART {part}")
-            self.payload = file_payload
-
-        # Check payload length is correct (file content without FEC)
-        if len(self.payload) < self.length:
-            return False
-        
         # Decompress bz2 payload
         try:
-            decomp = bz2.decompress(self.payload[:self.length])
+            decomp = bz2.decompress(self.buffer[:self.length])
         except Exception:
             return False
         
-        self.payload = decomp
-        self.length = len(self.payload)
+        self.buffer = decomp
+        self.length = len(self.buffer)
         self.compressed = False
 
         return True

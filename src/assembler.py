@@ -204,8 +204,8 @@ class Assembler:
 
         if self.config.verbose:
             print(Fore.WHITE + Back.RED + Style.BRIGHT + f"[DONE] {self.to_hex(p.uid, 4)} \"{self.files[p.uid].name}\" COMPLETE ", end='')
-            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"{str(len(self.files[p.uid].payload)).zfill(4)}/{str(self.files[p.uid].parts).zfill(4)}")
-            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"MISSING {self.files[p.uid].parts - len(self.files[p.uid].payload)} PARTS")
+            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"{str(self.files[p.uid].part_counter).zfill(4)}/{str(self.files[p.uid].parts).zfill(4)}")
+            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"MISSING {self.files[p.uid].parts - self.files[p.uid].part_counter} PARTS")
 
 
     def is_ignored(self, f):
