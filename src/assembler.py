@@ -146,6 +146,12 @@ class Assembler:
         
         # Check if last part has been received
         if self.files[p.uid].complete:
+            # Delete ignored channels
+            if self.files[p.uid].ignored:
+                print(Fore.YELLOW + Back.BLACK + Style.BRIGHT + "       SKIPPING FILE IN IGNORED CHANNEL")
+                del self.files[p.uid]
+                return
+
             # Output format is uncompressed
             if self.config.format != "bz2":
                 # Get decompression start time
