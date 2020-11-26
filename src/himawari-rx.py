@@ -20,7 +20,7 @@ from assembler import Assembler
 
 class HimawariRX:
     def __init__(self):
-        self.version = "0.1"
+        self.version = "0.1.1"
 
         try:
             print("┌──────────────────────────────────────────────┐")

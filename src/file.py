@@ -129,6 +129,8 @@ class File:
 
         elif self.ext == ".tar":
             return f"{path}\\{self.name}{self.ext}"
+        else:
+            return f"{path}\\{self.name}"
 
 
     def get_int(self, data):
