@@ -17,6 +17,25 @@ A (work in progress) guide for setting up the hardware and software components o
 
 <a href="https://vksdr.com/himawari-rx" target="_blank"><p align="center"><img src="https://vksdr.com/bl-content/uploads/pages/211ee4ec1b2432204d0a98f46b47a131/guide-thumb-white.png" title="Receiving Images from Geostationary Weather Satellite Himawari-8 via HimawariCast"></p></a>
 
+**In the meantime here is a quick overview of the required setup:**
+
+HimawariCast is a C-band DVB-S2 downlink on geostationary communication satellite JCSAT-2B at 154°E. The downlink frequency is 4148 MHz with a symbol rate of 2586 ksps and horizontal polarisation. On a standard 5150 MHz LO C-band LNB it has an IF of 1002 MHz.
+
+A standard DVB-S2 receiver card/box such as the [TBS6902](https://www.tbsdtv.com/products/tbs6902-dvb-s2-dual-tuner-pcie-card.html) (PCIe) or [TBS5520SE](https://www.tbsdtv.com/products/tbs5520se_multi-standard_tv_tuner_usb_box.html) (USB) can receive this downlink either using Windows or Linux. The downlink carries multicast UDP packets which are wrapped in [DVB-MPE](https://en.wikipedia.org/wiki/Multiprotocol_Encapsulation) and need to be unwrapped with software such as [TSDuck](https://tsduck.io/), the [TBS IP Tool](https://www.tbsdtv.com/blog/tbs-ip-tool-is-updated-to-v3-0-5-0-which-added-tbs5927-support.html) or [TSReader](https://www.tsreader.com/).
+
+For TSDuck, the following command should work in most cases. 
+
+```
+tsp -I dvb --adapter 0 --delivery-system "DVB-S2" --lnb "5150000000" --frequency 4148000000 --modulation QPSK --symbol-rate 2586148 --fec-inner "3/5" --roll-off 0.2 --polarity "horizontal" -P mpe --pid 0x03E9 --udp-forward --log -O drop
+```
+
+For TSReader, use ``File -> IP/DVB Mode`` and select PID ``0x03E9 (1001)``, then right click on ``UDP: 239.0.0.1`` in the PID list and select ``Retransmit UDP payload``.
+
+To install himawari-rx, download the ``himawari-rx.zip`` from the [latest release](https://github.com/sam210723/himawari-rx/releases/latest) and extract it to a new folder. Next, install the required Python packages with ``pip install -r requirements.txt``. Finally, run himawari-rx with ``python himawari-rx.py``.
+
+himawari-rx will begin decoding images once UDP packets from the downlink are being transmitted onto the local network using TSDuck, the TBS IP Tool or TSReader.
+
+
 ## Imaging Bands
 Himawari-8 is capable of capturing Earth in 16 different wavelengths of light, 14 of which are transmitted via the HimawariCast service.
 
