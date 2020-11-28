@@ -4,6 +4,7 @@ release: clean
 	@echo. && @echo ====== Building release package ======
 	mkdir release
 	copy /Y src\*.py release
+	copy /Y src\himawari-rx.bat release
 	mkdir release\tools
 	copy /Y src\tools\*.py release\tools
 	copy /Y src\*.ini release
