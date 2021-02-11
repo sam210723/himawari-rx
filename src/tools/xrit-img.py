@@ -40,7 +40,7 @@ def init():
 
     # Input is directory
     if os.path.isdir(args.INPUT):
-        for f in glob.glob(f"{args.INPUT}\\IMG_*[!.png]"):
+        for f in glob.glob(f"{args.INPUT}/IMG_*[!.png]"):
             files.append(f)
         files.sort()
     
@@ -86,7 +86,7 @@ def init():
                     groups.pop(i, None)
             
             # Check image has not already been generated
-            if os.path.isfile(f"{args.INPUT}\\{name.full}.png") and not args.o:
+            if os.path.isfile(f"{args.INPUT}/{name.full}.png") and not args.o:
                 print("    IMAGE ALREADY GENERATED...SKIPPING (use -o to overwrite existing images)")
                 groups.pop(i, None)
             print()
@@ -129,8 +129,8 @@ def process_group(name, group):
         offset = img.height * (i - 1)
         out_i.paste(img, (0, offset))
     
-    out_i.save(f"{args.INPUT}\\{name}.png", format="PNG")
-    print(f"  {Fore.GREEN}{Style.BRIGHT}SAVED \"{args.INPUT}\\{name}.png\"\n")
+    out_i.save(f"{args.INPUT}/{name}.png", format="PNG")
+    print(f"  {Fore.GREEN}{Style.BRIGHT}SAVED \"{args.INPUT}/{name}.png\"\n")
 
 def process_single(path, save=True):
     """

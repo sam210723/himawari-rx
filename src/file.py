@@ -124,13 +124,13 @@ class File:
             else:
                 self.ext = ""
             
-            pathlib.Path(f"{path}\\{date}\\{time}").mkdir(parents=True, exist_ok=True)
-            return f"{path}\\{date}\\{time}\\{self.name}{self.ext}"
+            pathlib.Path(f"{path}/{date}/{time}").mkdir(parents=True, exist_ok=True)
+            return f"{path}/{date}/{time}/{self.name}{self.ext}"
 
         elif self.ext == ".tar":
-            return f"{path}\\{self.name}{self.ext}"
+            return f"{path}/{self.name}{self.ext}"
         else:
-            return f"{path}\\{self.name}"
+            return f"{path}/{self.name}"
 
 
     def get_int(self, data):

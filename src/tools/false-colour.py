@@ -34,9 +34,9 @@ def init():
     colorama.init(autoreset=True)
     
     # Search for channel files
-    r = glob.glob(f"{args.INPUT}\\IMG_DK01{args.r}_*.{args.e}")
-    g = glob.glob(f"{args.INPUT}\\IMG_DK01{args.g}_*.{args.e}")
-    b = glob.glob(f"{args.INPUT}\\IMG_DK01{args.b}_*.{args.e}")
+    r = glob.glob(f"{args.INPUT}/IMG_DK01{args.r}_*.{args.e}")
+    g = glob.glob(f"{args.INPUT}/IMG_DK01{args.g}_*.{args.e}")
+    b = glob.glob(f"{args.INPUT}/IMG_DK01{args.b}_*.{args.e}")
 
     if len(r) == 0 or len(g) == 0 or len(b) == 0:
         if len(r) == 0: print(f"{Fore.WHITE}{Back.RED}{Style.BRIGHT}MISSING RED CHANNEL")
@@ -86,7 +86,7 @@ def process(r, g, b):
     out = Image.merge("RGB", (images["R"], images["G"], images["B"]))
 
     # Save image to disk
-    fpath = f"{args.INPUT}\\FC.png"
+    fpath = f"{args.INPUT}/FC.png"
     out.save(fpath, format="PNG")
     print(f"Image saved to \"{fpath}\"")
 
