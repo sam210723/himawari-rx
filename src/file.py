@@ -16,6 +16,7 @@ class File:
         self.part_counter = 0       # Number of parts received
         self.temp_parts = []        # List of parts which arrived before info
         self.ignored = False        # File is associated with ignored channel
+        self.combine = False        # All files being output to a single directory
         self.complete = False       # All file parts have been received
         self.compressed = True      # File compression state flag
 

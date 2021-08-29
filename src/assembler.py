@@ -114,6 +114,9 @@ class Assembler:
             # Set ignored file flag
             self.files[p.uid].ignored = self.is_ignored(self.files[p.uid])
 
+            # Set combined output flag
+            self.files[p.uid].combine = self.config.combine
+
             # Print file info
             if self.config.verbose:
                 print(f"\n[INFO] {self.to_hex(p.uid, 4)} \"{self.files[p.uid].name}\" ", end='')
