@@ -5,13 +5,25 @@ All notable changes to this project will be documented in this file.
 <summary>Unreleased changes</summary>
 
 ### Added
-  - `combine` option to save imgaes to single folder (XRIT2PIC compatibility)
+  - 
 
 ### Changed
-  - Renamed `ignored_channels` option to `ignored`
+  - 
 
 ### Fixed
   - 
+</details>
+
+
+## [v0.1.3](https://github.com/sam210723/himawari-rx/releases/tag/v0.1.3) - Combined Image Output (2021-08-29)
+<details>
+<summary>Details</summary>
+
+### Added
+  - New `combine` option to save imgaes to single folder ([XRIT2PIC](http://www.alblas.demon.nl/wsat/software/soft_msg.html) compatibility)
+
+### Changed
+  - Renamed `ignored_channels` option to `ignored`
 </details>
 
 
