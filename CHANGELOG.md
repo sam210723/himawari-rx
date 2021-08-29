@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 <summary>Unreleased changes</summary>
 
 ### Added
-  - 
+  - `combine` option to save imgaes to single folder (XRIT2PIC compatibility)
 
 ### Changed
   - Renamed `ignored_channels` option to `ignored`

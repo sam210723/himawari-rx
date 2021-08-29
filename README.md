@@ -65,6 +65,7 @@ Himawari-8 is capable of capturing Earth in 16 different wavelengths of light, 1
 | Setting   | Description                                                                   | Options                                                 | Default      |
 | --------- | ----------------------------------------------------------------------------- | ------------------------------------------------------- | ------------ |
 | `path`    | Root output path for received files                                           | *Absolute or relative file path*                        | `"received"` |
+| `combine` | Save all images in a single directory (XRIT2PIC compatibility)                | `true` or `false`                                       | `false`      |
 | `format`  | File type to output                                                           | `bz2`: Compressed xRIT files<br>`xrit`: LRIT/HRIT files | `xrit`       |
 | `ignored` | List of channels (bands) to ignore<br>(e.g. `"B09", "IR2"`)                   | <a href="#imaging-bands">Table of available bands</a>   | *none*       |
 
