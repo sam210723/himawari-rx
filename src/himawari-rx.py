@@ -54,7 +54,7 @@ class HimawariRX:
                 self.dumpf,
                 self.config['rx']['path'],
                 self.config['rx']['format'],
-                self.config['rx']['ignored_channels']
+                self.config['rx']['ignored']
             )
         )
 
@@ -200,7 +200,7 @@ class HimawariRX:
             "rx": {
                 "path": Path(cfgp.get('rx', 'path')),
                 "format": cfgp.get('rx', 'format'),
-                "ignored_channels": cfgp.get('rx', 'ignored_channels')
+                "ignored": cfgp.get('rx', 'ignored')
             },
             "udp": {
                 "ip":   cfgp.get('udp', 'ip'),
@@ -214,13 +214,13 @@ class HimawariRX:
             self.safe_stop()
         
         # If VCID blacklist is not empty
-        if opts['rx']['ignored_channels'] != "":
+        if opts['rx']['ignored'] != "":
             # Parse blacklist string into int or list
-            ignored_channels = ast.literal_eval(opts['rx']['ignored_channels'])
+            ignored = ast.literal_eval(opts['rx']['ignored'])
 
             # If parsed into int, wrap int in list
-            if type(ignored_channels) == str: ignored_channels = [ignored_channels]
-            opts['rx']['ignored_channels'] = ignored_channels
+            if type(ignored) == str: ignored = [ignored]
+            opts['rx']['ignored'] = ignored
 
         return opts
 
@@ -240,15 +240,15 @@ class HimawariRX:
         print(f"OUTPUT PATH:      {self.config['rx']['path'].absolute()}")
         print(f"OUTPUT FORMAT:    {self.config['rx']['format']}")
 
-        if (len(self.config['rx']['ignored_channels']) == 0):
+        if (len(self.config['rx']['ignored']) == 0):
             print("IGNORED CHANNELS: None")
         else:
-            ignored_channels = ""
-            for i, c in enumerate(self.config['rx']['ignored_channels']):
-                if i > 0: ignored_channels += ", "
-                ignored_channels += c
+            ignored = ""
+            for i, c in enumerate(self.config['rx']['ignored']):
+                if i > 0: ignored += ", "
+                ignored += c
         
-            print(f"IGNORED CHANNELS: {ignored_channels}")
+            print(f"IGNORED CHANNELS: {ignored}")
         
         print(f"VERSION:          {self.version}\n")
 
