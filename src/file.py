@@ -116,17 +116,24 @@ class File:
         """
 
         if self.name[:3] == "IMG":
-            name_split = self.name.split("_")
-            date = name_split[2][:8]
-            time = name_split[2][8:]
-
             if self.compressed:
                 self.ext = ".bz2"
             else:
                 self.ext = ""
-            
-            pathlib.Path(f"{path}/{date}/{time}").mkdir(parents=True, exist_ok=True)
-            return f"{path}/{date}/{time}/{self.name}{self.ext}"
+
+            # Save images in single directory
+            if self.combine:
+                pathlib.Path(path).mkdir(parents=True, exist_ok=True)
+                return f"{path}/{self.name}{self.ext}"
+
+            # Save images in date/time folders
+            else:
+                name_split = self.name.split("_")
+                date = name_split[2][:8]
+                time = name_split[2][8:]
+                
+                pathlib.Path(f"{path}/{date}/{time}").mkdir(parents=True, exist_ok=True)
+                return f"{path}/{date}/{time}/{self.name}{self.ext}"
 
         elif self.ext == ".tar":
             return f"{path}/{self.name}{self.ext}"
