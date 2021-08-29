@@ -62,18 +62,18 @@ Himawari-8 is capable of capturing Earth in 16 different wavelengths of light, 1
 
 ## List of options
 #### `rx` section
-| Setting | Description | Options | Default |
-| ------- | ----------- | ------- | ------- |
-| `path` | Root output path for received files | *Absolute or relative file path* | `"received"` |
-| `format` | File type to output | `bz2`: Compressed xRIT files<br>`xrit`: LRIT/HRIT files | `xrit` |
-| `ignored_channels` | List of channels (bands) to ignore<br>(e.g. `"B09", "IR2"`) | <a href="https://vksdr.com/bl-content/uploads/pages/211ee4ec1b2432204d0a98f46b47a131/bands_w.png" target="_blank">Table of available bands</a> | *none* |
+| Setting   | Description                                                                   | Options                                                 | Default      |
+| --------- | ----------------------------------------------------------------------------- | ------------------------------------------------------- | ------------ |
+| `path`    | Root output path for received files                                           | *Absolute or relative file path*                        | `"received"` |
+| `format`  | File type to output                                                           | `bz2`: Compressed xRIT files<br>`xrit`: LRIT/HRIT files | `xrit`       |
+| `ignored` | List of channels (bands) to ignore<br>(e.g. `"B09", "IR2"`)                   | <a href="#imaging-bands">Table of available bands</a>   | *none*       |
 
 #### `udp` section
 These two options generally do not need to be changed.
-| Setting | Description | Options | Default |
-| ------- | ----------- | ------- | ------- |
-| `ip` | Multicast IP address of DVB-S2 receiver | `224.0.0.0` - `239.255.255.255` | `239.0.0.1` |
-| `port` | UDP output port of DVB-S2 receiver | *Any UDP port number* | `8001` |
+| Setting | Description                             | Options                         | Default     |
+| ------- | --------------------------------------- | ------------------------------- | ----------- |
+| `ip`    | Multicast IP address of DVB-S2 receiver | `224.0.0.0` - `239.255.255.255` | `239.0.0.1` |
+| `port`  | UDP output port of DVB-S2 receiver      | *Any UDP port number*           | `8001`      |
 
 
 ## Acknowledgments

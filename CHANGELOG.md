@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
   - 
 
 ### Changed
-  - 
+  - Renamed `ignored_channels` option to `ignored`
 
 ### Fixed
   - 
