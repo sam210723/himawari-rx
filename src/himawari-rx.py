@@ -199,6 +199,7 @@ class HimawariRX:
         opts = {
             "rx": {
                 "path": Path(cfgp.get('rx', 'path')),
+                "combine": cfgp.getboolean('rx', 'combine'),
                 "format": cfgp.get('rx', 'format'),
                 "ignored": cfgp.get('rx', 'ignored')
             },
@@ -239,6 +240,7 @@ class HimawariRX:
 
         print(f"OUTPUT PATH:      {self.config['rx']['path'].absolute()}")
         print(f"OUTPUT FORMAT:    {self.config['rx']['format']}")
+        print(f"COMBINED OUTPUT:  {'YES' if self.config['rx']['combine'] else 'NO'}")
 
         if (len(self.config['rx']['ignored']) == 0):
             print("IGNORED CHANNELS: None")
