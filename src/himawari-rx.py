@@ -11,6 +11,7 @@ from collections import namedtuple
 import colorama
 from colorama import Fore, Back, Style
 from configparser import ConfigParser
+import os
 from pathlib import Path
 import socket
 import struct
@@ -34,6 +35,9 @@ class HimawariRX:
 
         # Initialise Colorama
         colorama.init(autoreset=True)
+
+        # Change working directory to script location
+        os.chdir(Path(__file__).parent.absolute())
 
         self.args = self.parse_args()
         self.config = self.parse_config()

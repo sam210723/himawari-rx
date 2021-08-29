@@ -20,10 +20,13 @@ All notable changes to this project will be documented in this file.
 <summary>Details</summary>
 
 ### Added
-  - New `combine` option to save imgaes to single folder ([XRIT2PIC](http://www.alblas.demon.nl/wsat/software/soft_msg.html) compatibility)
+  - New `combine` option to save imgaes to single folder ([XRIT2PIC](http://www.alblas.demon.nl/wsat/software/soft_msg.html) compatibility, Issue #8)
 
 ### Changed
   - Renamed `ignored_channels` option to `ignored`
+
+### Fixed
+  - Relative paths when script is not in the CWD (Issue #7)
 </details>
 
 
