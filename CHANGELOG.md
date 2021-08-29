@@ -15,6 +15,21 @@ All notable changes to this project will be documented in this file.
 </details>
 
 
+## [v0.1.3](https://github.com/sam210723/himawari-rx/releases/tag/v0.1.3) - Combined Image Output (2021-08-29)
+<details>
+<summary>Details</summary>
+
+### Added
+  - New `combine` option to save imgaes to single folder ([XRIT2PIC](http://www.alblas.demon.nl/wsat/software/soft_msg.html) compatibility, [Issue #8](https://github.com/sam210723/himawari-rx/issues/8))
+
+### Changed
+  - Renamed `ignored_channels` option to `ignored`
+
+### Fixed
+  - Relative paths when script is not in the CWD ([Issue #7](https://github.com/sam210723/himawari-rx/issues/7))
+</details>
+
+
 ## [v0.1.2](https://github.com/sam210723/himawari-rx/releases/tag/v0.1.2) - Linux File Path Bugfix (2021-02-11)
 
 Fixed file paths for Linux hosts.

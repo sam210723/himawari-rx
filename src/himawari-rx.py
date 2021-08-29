@@ -11,6 +11,7 @@ from collections import namedtuple
 import colorama
 from colorama import Fore, Back, Style
 from configparser import ConfigParser
+import os
 from pathlib import Path
 import socket
 import struct
@@ -20,7 +21,7 @@ from assembler import Assembler
 
 class HimawariRX:
     def __init__(self):
-        self.version = "0.1.2"
+        self.version = "0.1.3"
 
         try:
             print("┌──────────────────────────────────────────────┐")
@@ -35,6 +36,9 @@ class HimawariRX:
         # Initialise Colorama
         colorama.init(autoreset=True)
 
+        # Change working directory to script location
+        os.chdir(Path(__file__).parent.absolute())
+
         self.args = self.parse_args()
         self.config = self.parse_config()
         self.print_config()
@@ -47,14 +51,15 @@ class HimawariRX:
         else:
             self.dumpf = None
 
-        assembler_config = namedtuple('assembler_config', 'verbose dump path format ignored')
+        assembler_config = namedtuple('assembler_config', 'verbose dump path combine format ignored')
         self.assembler = Assembler(
             assembler_config(
                 self.args.v,
                 self.dumpf,
                 self.config['rx']['path'],
+                self.config['rx']['combine'],
                 self.config['rx']['format'],
-                self.config['rx']['ignored_channels']
+                self.config['rx']['ignored']
             )
         )
 
@@ -199,8 +204,9 @@ class HimawariRX:
         opts = {
             "rx": {
                 "path": Path(cfgp.get('rx', 'path')),
+                "combine": cfgp.getboolean('rx', 'combine'),
                 "format": cfgp.get('rx', 'format'),
-                "ignored_channels": cfgp.get('rx', 'ignored_channels')
+                "ignored": cfgp.get('rx', 'ignored')
             },
             "udp": {
                 "ip":   cfgp.get('udp', 'ip'),
@@ -214,13 +220,13 @@ class HimawariRX:
             self.safe_stop()
         
         # If VCID blacklist is not empty
-        if opts['rx']['ignored_channels'] != "":
+        if opts['rx']['ignored'] != "":
             # Parse blacklist string into int or list
-            ignored_channels = ast.literal_eval(opts['rx']['ignored_channels'])
+            ignored = ast.literal_eval(opts['rx']['ignored'])
 
             # If parsed into int, wrap int in list
-            if type(ignored_channels) == str: ignored_channels = [ignored_channels]
-            opts['rx']['ignored_channels'] = ignored_channels
+            if type(ignored) == str: ignored = [ignored]
+            opts['rx']['ignored'] = ignored
 
         return opts
 
@@ -239,16 +245,17 @@ class HimawariRX:
 
         print(f"OUTPUT PATH:      {self.config['rx']['path'].absolute()}")
         print(f"OUTPUT FORMAT:    {self.config['rx']['format']}")
+        print(f"COMBINED OUTPUT:  {'YES' if self.config['rx']['combine'] else 'NO'}")
 
-        if (len(self.config['rx']['ignored_channels']) == 0):
+        if (len(self.config['rx']['ignored']) == 0):
             print("IGNORED CHANNELS: None")
         else:
-            ignored_channels = ""
-            for i, c in enumerate(self.config['rx']['ignored_channels']):
-                if i > 0: ignored_channels += ", "
-                ignored_channels += c
+            ignored = ""
+            for i, c in enumerate(self.config['rx']['ignored']):
+                if i > 0: ignored += ", "
+                ignored += c
         
-            print(f"IGNORED CHANNELS: {ignored_channels}")
+            print(f"IGNORED CHANNELS: {ignored}")
         
         print(f"VERSION:          {self.version}\n")
 

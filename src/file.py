@@ -16,6 +16,7 @@ class File:
         self.part_counter = 0       # Number of parts received
         self.temp_parts = []        # List of parts which arrived before info
         self.ignored = False        # File is associated with ignored channel
+        self.combine = False        # All files being output to a single directory
         self.complete = False       # All file parts have been received
         self.compressed = True      # File compression state flag
 
@@ -118,14 +119,17 @@ class File:
             name_split = self.name.split("_")
             date = name_split[2][:8]
             time = name_split[2][8:]
+            xrit = "HRIT" if time[-1] == "0" else "LRIT"
+            self.ext = ".bz2" if self.compressed else ""
 
-            if self.compressed:
-                self.ext = ".bz2"
+            if self.combine:
+                # Save images in single directory
+                pathlib.Path(f"{path}/{xrit}").mkdir(parents=True, exist_ok=True)
+                return f"{path}/{xrit}/{self.name}{self.ext}"
             else:
-                self.ext = ""
-            
-            pathlib.Path(f"{path}/{date}/{time}").mkdir(parents=True, exist_ok=True)
-            return f"{path}/{date}/{time}/{self.name}{self.ext}"
+                # Save images in date/time folders
+                pathlib.Path(f"{path}/{date}/{time}").mkdir(parents=True, exist_ok=True)
+                return f"{path}/{date}/{time}/{self.name}{self.ext}"
 
         elif self.ext == ".tar":
             return f"{path}/{self.name}{self.ext}"
