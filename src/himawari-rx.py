@@ -47,12 +47,13 @@ class HimawariRX:
         else:
             self.dumpf = None
 
-        assembler_config = namedtuple('assembler_config', 'verbose dump path format ignored')
+        assembler_config = namedtuple('assembler_config', 'verbose dump path combine format ignored')
         self.assembler = Assembler(
             assembler_config(
                 self.args.v,
                 self.dumpf,
                 self.config['rx']['path'],
+                self.config['rx']['combine'],
                 self.config['rx']['format'],
                 self.config['rx']['ignored']
             )
