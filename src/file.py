@@ -116,22 +116,18 @@ class File:
         """
 
         if self.name[:3] == "IMG":
-            if self.compressed:
-                self.ext = ".bz2"
-            else:
-                self.ext = ""
+            name_split = self.name.split("_")
+            date = name_split[2][:8]
+            time = name_split[2][8:]
+            xrit = "HRIT" if time[-1] == "0" else "LRIT"
+            self.ext = ".bz2" if self.compressed else ""
 
-            # Save images in single directory
             if self.combine:
-                pathlib.Path(path).mkdir(parents=True, exist_ok=True)
-                return f"{path}/{self.name}{self.ext}"
-
-            # Save images in date/time folders
+                # Save images in single directory
+                pathlib.Path(f"{path}/{xrit}").mkdir(parents=True, exist_ok=True)
+                return f"{path}/{xrit}/{self.name}{self.ext}"
             else:
-                name_split = self.name.split("_")
-                date = name_split[2][:8]
-                time = name_split[2][8:]
-                
+                # Save images in date/time folders
                 pathlib.Path(f"{path}/{date}/{time}").mkdir(parents=True, exist_ok=True)
                 return f"{path}/{date}/{time}/{self.name}{self.ext}"
 
