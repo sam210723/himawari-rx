@@ -78,5 +78,6 @@ These two options generally do not need to be changed.
 
 ## Acknowledgments
   - [@yanderen2](https://twitter.com/yanderen2) - Software testing and TS recordings
-  - [tcjj3](https://github.com/tcjj3) - Software testing
+  - [tcjj3](https://github.com/tcjj3) - Software testing and scripting
+  - [John Bell](https://twitter.com/eswnl) - Software testing and TS recordings
   - [@Apsattv](https://twitter.com/Apsattv) - TS recordings
