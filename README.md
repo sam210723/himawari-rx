@@ -9,13 +9,13 @@
 
 **himawari-rx** receives UDP datagrams over a network connection and outputs decoded image files to disk. The UDP datagrams can come from either a DVB-S2 receiver card such as a [TBS5520SE](https://www.tbsdtv.com/products/tbs5520se_multi-standard_tv_tuner_usb_box.html) or a satellite IP receiver such as the [Novra S300D](https://novra.com/product/s300d-receiver). A Software Defined Radio solution using GNU Radio is currently under development.
 
-![Himawari-8 Wavelengths](https://vksdr.com/bl-content/uploads/pages/211ee4ec1b2432204d0a98f46b47a131/wavelengths.png)
+![Himawari-8 Wavelengths](https://vksdr.com/bl-content/uploads/pages/95f4812a86753b6057b0e37ce4daa5d1/wavelengths.png)
 
 
 ## Getting Started
 A (work in progress) guide for setting up the hardware and software components of a HimawariCast receiver is [available on my site](https://vksdr.com/himawari-rx).
 
-<a href="https://vksdr.com/himawari-rx" target="_blank"><p align="center"><img src="https://vksdr.com/bl-content/uploads/pages/211ee4ec1b2432204d0a98f46b47a131/guide-thumb-white.png" title="Receiving Images from Geostationary Weather Satellite Himawari-8 via HimawariCast"></p></a>
+<a href="https://vksdr.com/himawari-rx" target="_blank"><p align="center"><img src="https://vksdr.com/bl-content/uploads/pages/95f4812a86753b6057b0e37ce4daa5d1/guide-thumb-white.png" title="Receiving Images from Geostationary Weather Satellite Himawari-8 via HimawariCast"></p></a>
 
 **In the meantime here is a quick overview of the required setup:**
 
@@ -39,7 +39,7 @@ himawari-rx will begin decoding images once UDP packets from the downlink are be
 ## Imaging Bands
 Himawari-8 is capable of capturing Earth in 16 different wavelengths of light, 14 of which are transmitted via the HimawariCast service.
 
-<p align="center"><img src="https://vksdr.com/bl-content/uploads/pages/211ee4ec1b2432204d0a98f46b47a131/bands_w.png" title="HimawariCast Bands"></p>
+<p align="center"><img src="https://vksdr.com/bl-content/uploads/pages/95f4812a86753b6057b0e37ce4daa5d1/bands_w.png" title="HimawariCast Bands"></p>
 
 <!--
 | Band | Detail  | Identifier  | Size  | Resolution    |
