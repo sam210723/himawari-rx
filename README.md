@@ -26,7 +26,7 @@ A standard DVB-S2 receiver card/box such as the [TBS6902](https://www.tbsdtv.com
 For TSDuck, the following command should work in most cases. 
 
 ```
-tsp -I dvb --adapter 0 --delivery-system "DVB-S2" --lnb "5150000000" --frequency 4148000000 --modulation QPSK --symbol-rate 2586148 --fec-inner "3/5" --roll-off 0.2 --polarity "horizontal" -P mpe --pid 0x03E9 --udp-forward --log -O drop
+tsp -I dvb --device-name /dev/dvb/adapter0:1  --lnb 5150 --delivery-system "DVB-S2" --frequency 4148000000 --modulation QPSK --symbol-rate 2586148 --fec-inner "3/5" --roll-off 0.2 --polarity "horizontal" -P mpe --pid 0x03E9 --udp-forward --log -O drop
 ```
 
 For TSReader, use ``File -> IP/DVB Mode`` and select PID ``0x03E9 (1001)``, then right click on ``UDP: 239.0.0.1`` in the PID list and select ``Retransmit UDP payload``.
