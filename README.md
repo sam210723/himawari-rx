@@ -35,6 +35,7 @@ To install himawari-rx, download the ``himawari-rx.zip`` from the [latest releas
 
 himawari-rx will begin decoding images once UDP packets from the downlink are being transmitted onto the local network using TSDuck, the TBS IP Tool or TSReader.
 
+To generate PNG image files from the received LRIT/HRIT files, use the `tools/xrit-img.py` script. These PNG files can then be combined into a false colour image using the `tools/false-colour.py` script.
 
 ## Imaging Bands
 Himawari-8 is capable of capturing Earth in 16 different wavelengths of light, 14 of which are transmitted via the HimawariCast service.
