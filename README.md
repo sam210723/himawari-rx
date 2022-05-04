@@ -1,7 +1,7 @@
 # :satellite: himawari-rx - HimawariCast Downlink Processor
 
 [![GitHub release](https://img.shields.io/github/release/sam210723/himawari-rx.svg)](https://github.com/sam210723/himawari-rx/releases/latest)
-[![Python versions](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue)](https://www.python.org/)
+[![Python versions](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-blue)](https://www.python.org/)
 [![Github all releases](https://img.shields.io/github/downloads/sam210723/himawari-rx/total.svg)](https://github.com/sam210723/himawari-rx/releases/latest)
 [![GitHub license](https://img.shields.io/github/license/sam210723/himawari-rx.svg)](https://github.com/sam210723/himawari-rx/blob/master/LICENSE)
 
@@ -65,10 +65,23 @@ Himawari-8 is capable of capturing Earth in 16 different wavelengths of light, 1
 #### `rx` section
 | Setting   | Description                                                                   | Options                                                 | Default      |
 | --------- | ----------------------------------------------------------------------------- | ------------------------------------------------------- | ------------ |
+| `input`   | Input source                                                                  | `nng`, `tcp` or `udp`                                   | `udp`      |
 | `path`    | Root output path for received files                                           | *Absolute or relative file path*                        | `"received"` |
 | `combine` | Save all images in a single directory (XRIT2PIC compatibility)                | `true` or `false`                                       | `false`      |
 | `format`  | File type to output                                                           | `bz2`: Compressed xRIT files<br>`xrit`: LRIT/HRIT files | `xrit`       |
 | `ignored` | List of channels (bands) to ignore<br>(e.g. `"B09", "IR2"`)                   | <a href="#imaging-bands">Table of available bands</a>   | *none*       |
+
+#### `nng` section
+| Setting | Description                              | Options               | Default     |
+| ------- | ---------------------------------------- | ----------------------| ----------- |
+| `ip`    | IP address of a **nanomsg** data source  | *Any IPv4 address*    | `127.0.0.1` |
+| `port`  | Server port of a **nanomsg** data source | *Any TCP port number* | `8003`      |
+
+#### `tcp` section
+| Setting | Description                      | Options               | Default     |
+| ------- | -------------------------------- | ----------------------| ----------- |
+| `ip`    | IP address of a TCP data source  | *Any IPv4 address*    | `127.0.0.1` |
+| `port`  | Server port of a TCP data source | *Any TCP port number* | `8002`      |
 
 #### `udp` section
 These two options generally do not need to be changed.
