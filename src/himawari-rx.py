@@ -21,7 +21,7 @@ from assembler import Assembler
 
 class HimawariRX:
     def __init__(self):
-        self.version = "0.1.3"
+        self.version = "0.1.4"
 
         try:
             print("┌──────────────────────────────────────────────┐")
@@ -36,21 +36,26 @@ class HimawariRX:
         # Initialise Colorama
         colorama.init(autoreset=True)
 
+        # Parse command line arguments
+        self.args = self.parse_args()
+
         # Change working directory to script location
         os.chdir(Path(__file__).parent.absolute())
 
-        self.args = self.parse_args()
+        # Configure himawari-rx
         self.config = self.parse_config()
         self.print_config()
         self.config_dirs()
         self.config_input()
 
+        # Open packet dump file
         if self.args.dump != None:
             self.dumpf = open(self.args.dump, "wb")
             print(Fore.GREEN + Style.BRIGHT + f"Writing packets to: \"{self.args.dump}\"")
         else:
             self.dumpf = None
 
+        # Create file assembler instance
         assembler_config = namedtuple('assembler_config', 'verbose dump path combine format ignored')
         self.assembler = Assembler(
             assembler_config(
@@ -91,18 +96,46 @@ class HimawariRX:
         Handle data from UDP socket
         """
 
+        # Maximum packet length
+        buflen = 1427
+
         while not self.stop:
-            if self.args.file == None:
+            if self.config['rx']['input'] == "nng":
                 try:
                     # Read packet from socket
-                    data, addr = self.sck.recvfrom(1427)
+                    data, addr = self.sck.recv(buflen + 8)
+                except Exception as e:
+                    print(Fore.WHITE + Back.RED + Style.BRIGHT + "LOST CONNECTION TO NANOMSG SOURCE")
+                    print(e)
+                    self.safe_stop()
+                
+                # Push to assembler
+                self.assembler.push(data[8:])
+
+            elif self.config['rx']['input'] == "tcp":
+                try:
+                    # Read packet from socket
+                    data, addr = self.sck.recv(buflen)
+                except Exception as e:
+                    print(Fore.WHITE + Back.RED + Style.BRIGHT + "LOST CONNECTION TO TCP SOURCE")
+                    print(e)
+                    self.safe_stop()
+                
+                # Push to assembler
+                self.assembler.push(data)
+
+            elif self.config['rx']['input'] == "udp":
+                try:
+                    # Read packet from socket
+                    data, addr = self.sck.recvfrom(buflen)
                 except Exception as e:
                     print(e)
                     self.safe_stop()
                 
                 # Push to assembler
                 self.assembler.push(data)
-            else:
+
+            elif self.config['rx']['input'] == "file":
                 if not self.packetf.closed:
                     # Read packet header from file
                     header = self.packetf.read(6)
@@ -137,19 +170,43 @@ class HimawariRX:
         Configure UDP socket or file input
         """
 
-        if self.args.file == None:
+        if self.config['rx']['input'] == "nng":
+            # Create socket and address
+            self.sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            addr = (self.config['nng']['ip'], int(self.config['nng']['port']))
+
+            # Connect socket
+            print(f"Connecting to {addr[0]}:{addr[1]}...", end='', flush=True)
+            self.connect_socket(self.sck, addr)
+
+            # Setup nanomsg publisher in goesrecv
+            self.sck.send(b'\x00\x53\x50\x00\x00\x21\x00\x00')
+            if self.sck.recv(8) != b'\x00\x53\x50\x00\x00\x20\x00\x00':
+                print(Fore.WHITE + Back.RED + Style.BRIGHT + "ERROR CONFIGURING NANOMSG")
+                self.safe_stop()
+
+        elif self.config['rx']['input'] == "tcp":
+            # Create socket and address
+            self.sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            addr = (self.config['tcp']['ip'], int(self.config['tcp']['port']))
+
+            # Connect socket
+            print(f"Connecting to {addr[0]}:{addr[1]}...", end='', flush=True)
+            self.connect_socket(self.sck, addr)
+
+        elif self.config['rx']['input'] == "udp":
+            # Create socket and address
             self.sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            ip = self.config['udp']['ip']
-            port = self.config['udp']['port']
+            addr = (self.config['udp']['ip'], int(self.config['udp']['port']))
 
-            print(f"Binding UDP socket ({ip}:{port})...", end='')
-
+            # Bind socket
+            print(f"Binding UDP socket {addr[0]}:{addr[1]}...", end='', flush=True)
             try:
                 # Bind socket
-                self.sck.bind(('', port))
+                self.sck.bind(('', addr[1]))
 
                 # Setup multicast
-                mreq = struct.pack("=4sl", socket.inet_aton(ip), socket.INADDR_ANY)
+                mreq = struct.pack("=4sl", socket.inet_aton(addr[0]), socket.INADDR_ANY)
                 self.sck.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
                 print(Fore.GREEN + Style.BRIGHT + "SUCCESS")
@@ -157,15 +214,30 @@ class HimawariRX:
                 print(Fore.WHITE + Back.RED + Style.BRIGHT + "FAILED")
                 print(e)
                 self.safe_stop()
-        else:
+
+        elif self.config['rx']['input'] == "file":
             print(f"Opening packet file...", end='')
-            
+
             if Path(self.args.file).exists():
                 self.packetf = open(self.args.file, 'rb')
                 print(Fore.GREEN + Style.BRIGHT + "SUCCESS")
             else:
                 print(Fore.WHITE + Back.RED + Style.BRIGHT + "FILE DOES NOT EXIST")
                 self.safe_stop()
+
+
+    def connect_socket(self, s, addr):
+        """
+        Connect a socket and handle exceptions
+        """
+
+        try:
+            s.connect(addr)
+            print(Fore.GREEN + Style.BRIGHT + "CONNECTED")
+        except socket.error as e:
+            if e.errno == 10061: print(Fore.WHITE + Back.RED + Style.BRIGHT + "CONNECTION REFUSED")
+            print(e)
+            self.safe_stop()
 
 
     def config_dirs(self):
@@ -182,15 +254,20 @@ class HimawariRX:
         """
         Parse command line arguments
         """
-        
+
         argp = ArgumentParser()
         argp.description = "Receive weather images from geostationary satellite Himawari-8 (140.7˚E) via the HimawariCast service."
         argp.add_argument("--config", action="store", help="Configuration file path (.ini)", default="himawari-rx.ini")
         argp.add_argument("--file", action="store", help="Path to packet file", default=None)
         argp.add_argument("-v", action="store_true", help="Enable verbose console output (only useful for debugging)", default=True)
         argp.add_argument("--dump", action="store", help="Path to packet output file")
-        
-        return argp.parse_args()
+
+        args = argp.parse_args()
+
+        # Get absolute path of input file
+        if args.file: args.file = str(Path(args.file).absolute())
+
+        return args
     
 
     def parse_config(self):
@@ -203,10 +280,19 @@ class HimawariRX:
 
         opts = {
             "rx": {
+                "input": cfgp.get('rx', 'input'),
                 "path": Path(cfgp.get('rx', 'path')),
                 "combine": cfgp.getboolean('rx', 'combine'),
                 "format": cfgp.get('rx', 'format'),
                 "ignored": cfgp.get('rx', 'ignored')
+            },
+            "nng": {
+                "ip":   cfgp.get('nng', 'ip'),
+                "port": cfgp.getint('nng', 'port')
+            },
+            "tcp": {
+                "ip":   cfgp.get('tcp', 'ip'),
+                "port": cfgp.getint('tcp', 'port')
             },
             "udp": {
                 "ip":   cfgp.get('udp', 'ip'),
@@ -214,12 +300,17 @@ class HimawariRX:
             }
         }
 
+        # Check input type is valid
+        if opts['rx']['input'] not in ['nng', 'tcp', 'udp']:
+            print(Fore.WHITE + Back.RED + Style.BRIGHT + f"INVALID INPUT TYPE \"{opts['rx']['input']}\"")
+            self.safe_stop()
+
         # Check output format is valid
         if opts['rx']['format'] not in ['bz2', 'xrit', 'png', 'jpg', 'bmp']:    #TODO: Handle image formats
             print(Fore.WHITE + Back.RED + Style.BRIGHT + f"INVALID OUTPUT FORMAT \"{opts['rx']['format']}\"")
             self.safe_stop()
         
-        # If VCID blacklist is not empty
+        # If band blacklist is not empty
         if opts['rx']['ignored'] != "":
             # Parse blacklist string into int or list
             ignored = ast.literal_eval(opts['rx']['ignored'])
@@ -238,11 +329,15 @@ class HimawariRX:
 
         print(f"CONFIG FILE:      {self.args.config}")
         
-        if self.args.file == None:
-            print(f"UDP INPUT:        {self.config['udp']['ip']}:{self.config['udp']['port']}")
+        if not self.args.file:
+            input_path =  f"{self.config['rx']['input'].upper()}"
+            input_path += f" ({self.config[self.config['rx']['input']]['ip']}:{self.config[self.config['rx']['input']]['port']})"
         else:
-            print(f"FILE INPUT:       {self.args.file}")
+            input_path = Path(self.args.file).name
+            self.config['rx']['input'] = "file"
 
+
+        print(f"INPUT:            {input_path}")
         print(f"OUTPUT PATH:      {self.config['rx']['path'].absolute()}")
         print(f"OUTPUT FORMAT:    {self.config['rx']['format']}")
         print(f"COMBINED OUTPUT:  {'YES' if self.config['rx']['combine'] else 'NO'}")

@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 <summary>Unreleased changes</summary>
 
 ### Added
-  - 
+  - [nanomsg](https://nanomsg.org/) (`nng`) input option
+  - Raw TCP socket input option
 
 ### Changed
   - 
